@@ -1,0 +1,16 @@
+{
+    "variables": {
+        "user": "adminubuntu",
+        "password": "adminubuntu"
+    },
+
+    "builders":
+    [
+        {
+            "name": "ubuntu-1404-server",
+            "type": "docker",
+            "image": "ubuntu",
+            "export_path":"image.tar"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "variables": {
+        "password": "Administr@tor",
+        "disk_size": "61440"
+    },
+    "builders": [
+        {
+            "name": "windows-2012R2",
+            "type": "qemu",
+            "format":"qcow2",
+            "accelerator": "kvm",
+            "disk_size": "{{ user `disk_size`}}",
+            "iso_url": "/home/html/iso/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO",
+            "iso_checksum_type": "md5",
+            "iso_checksum": "5b5e08c490ad16b59b1d9fab0def883a",
+            "ssh_username": "Administrator",
+            "ssh_password": "Administrator",
+            "ssh_wait_timeout": "30m",
+            "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+            "boot_wait": "2s",
+            "floppy_files": [
+                "/home/jsondir/floppy/drivers/virtio-win-0.1-81/WIN7/AMD64/*",
+                "/home/jsondir/floppy/common/*",
+                "/home/jsondir/floppy/windows-2012-standard-amd64/*"
+            ]
+
+        }
+    ]
+}

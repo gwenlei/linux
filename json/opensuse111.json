@@ -1,0 +1,39 @@
+{
+  "builders":
+  [
+    {
+      "type": "qemu",
+      "iso_url":"http://192.168.0.82/iso/openSUSE-11.1-DVD-x86_64.iso",
+      "iso_checksum": "2afee1b8a87175e6dee2b8dbbd1ad8e8",
+      "iso_checksum_type": "md5",
+      "output_directory": "output_opensuse111",
+      "ssh_wait_timeout": "30s",
+      "shutdown_command": "shutdown -P now",
+      "disk_size": 100000,
+      "format": "qcow2",
+      "headless": false,
+      "accelerator": "kvm",
+      "http_directory": "httpdir",
+      "http_port_min": 10082,
+      "http_port_max": 10089,
+      "ssh_host_port_min": 2222,
+      "ssh_host_port_max": 2229,
+      "ssh_username": "root",
+      "ssh_password": "engine",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "90m",
+      "vm_name": "opensuse111",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "boot_wait": "5s",
+      "boot_command":
+      [
+       "<esc><enter><wait>",
+       "linux netsetup=dhcp lang=en_US hostname=build netdevice=eth0",
+       " autoyast=http://192.168.0.82/autoinst111.xml",
+       " textmode=1 insecure=1<wait><enter><wait>"
+      ]
+    }
+  ]
+}
+

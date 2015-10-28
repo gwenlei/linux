@@ -1,0 +1,17 @@
+OUTPUT_DIRECTORY="/home/jsondir/output_centos66v2"
+VM_NAME="centos66"
+SSH_USERNAME="root"
+SSH_PASSWORD="engine"
+ISO_URL="/home/html/iso/CentOS-6.6-x86_64-bin-DVD1.iso"
+KS="http://192.168.0.82/centos-cdrom-lei2-v2.cfg"
+ISO_CHECKSUM=`md5sum $ISO_URL | awk '{print $1}'`
+
+sed "s#OUTPUT_DIRECTORY#$OUTPUT_DIRECTORY#g" /home/jsondir/template/centos66.json > /home/jsondir/centos66.json
+sed -i "s/VM_NAME/$VM_NAME/g" /home/jsondir/centos66.json
+sed -i "s/SSH_USERNAME/$SSH_USERNAME/g" /home/jsondir/centos66.json
+sed -i "s/SSH_PASSWORD/$SSH_PASSWORD/g" /home/jsondir/centos66.json
+sed -i "s#ISO_URL#$ISO_URL#g" /home/jsondir/centos66.json
+sed -i "s/ISO_CHECKSUM/$ISO_CHECKSUM/g" /home/jsondir/centos66.json
+sed -i "s#KS#$KS#g" /home/jsondir/centos66.json
+sed "s/SSH_PASSWORD/$SSH_PASSWORD/g" /home/jsondir/template/centos-cdrom-lei2-v2.cfg > /home/html/centos-cdrom-lei2-v2.cfg
+
