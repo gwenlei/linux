@@ -18,12 +18,14 @@ echo zonename=$zonename zoneid=$zoneid
 echo networkname=$networkname networkid=$networkid
 echo userdata=$userdata
 
-cloudmonkey deploy virtualmachine startvm=false serviceofferingid=$serviceofferingid templateid=$templateid zoneid=$zoneid networkids=$networkid name=$vmname userdata="`cat my-user-data|base64`"
+id=$(cloudmonkey deploy virtualmachine startvm=false serviceofferingid=$serviceofferingid templateid=$templateid zoneid=$zoneid networkids=$networkid name=$vmname userdata="`cat my-user-data|base64`"|awk '/^id =/ {print $3}')
 
+echo $id
 ip=`grep IPADDR my-user-data|awk  -F"[=]" '{print $2}'`
 mysql -u root <<EOF
 use cloud;
-update vm_instance set private_ip_address='$ip' where name='$vmname';
-update user_vm_view set ip_address='$ip' where  name='$vmname';
+update vm_instance set private_ip_address='$ip' where uuid='$id';
+update user_vm_view set ip_address='$ip' where  uuid='$id';
 EOF
+
 

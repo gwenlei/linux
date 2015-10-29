@@ -7,10 +7,10 @@ networkname="iso-vn-001"
 userdata=`cat my-user-data|base64`
 
 cloudmonkey set display table
-templateid=`cloudmonkey list templates templatefilter=executable filter=name,id name="$templatename"|grep "$templatename"|awk '{print $2}'`
-serviceofferingid=`cloudmonkey list serviceofferings filter=name,id name="$serviceofferingname"|grep "$serviceofferingname"|awk '{print $5}'`
-zoneid=`cloudmonkey list zones filter=id,name name="$zonename"|grep "$zonename"|awk '{print $4}'`
-networkid=`cloudmonkey list networks filter=name,id name="$networkname"|grep "$networkname"|awk '{print $2}'`
+templateid=`cloudmonkey list templates templatefilter=executable filter=name,id name="$templatename"|grep "$templatename"|awk -F"[|]" '{print $2}'|sed -e "s/ //g"`
+serviceofferingid=`cloudmonkey list serviceofferings filter=name,id name="$serviceofferingname"|grep "$serviceofferingname"|awk -F"[|]" '{print $3}'|sed -e "s/ //g"`
+zoneid=`cloudmonkey list zones filter=id,name name="$zonename"|grep "$zonename"|awk -F"[|]" '{print $3}'|sed -e "s/ //g"`
+networkid=`cloudmonkey list networks filter=name,id name="$networkname"|grep "$networkname"|awk -F"[|]" '{print $2}'|sed -e "s/ //g"`
 
 echo templatename=$templatename templateid=$templateid
 echo serviceofferingname=$serviceofferingname serviceofferingid=$serviceofferingid
