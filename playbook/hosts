@@ -1,0 +1,8 @@
+# hosts
+[docker]
+centos1 ansible_ssh_host=127.0.0.1 ansible_ssh_port=49154 ansible_ssh_user=root ansible_ssh_pass=engine hostname=centos1
+centos2 ansible_ssh_host=127.0.0.1 ansible_ssh_port=49155 ansible_ssh_user=root ansible_ssh_pass=engine hostname=centos2
+centos6 ansible_ssh_host=127.0.0.1 ansible_ssh_port=49156 ansible_ssh_user=root ansible_ssh_pass=engine hostname=centos6
+
+[docker:vars]
+server_ip=192.168.10.192
