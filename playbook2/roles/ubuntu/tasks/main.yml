@@ -1,0 +1,9 @@
+  - name: install collectd
+    sudo: yes
+    apt: name=collectd state=latest
+  - name: copy collectd.conf
+    sudo: yes
+    template: src=collectd.conf dest=/etc/collectd/collectd.conf
+  - name: start collectd
+    sudo: yes
+    service: name=collectd state=restarted

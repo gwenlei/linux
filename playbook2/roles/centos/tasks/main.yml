@@ -1,0 +1,19 @@
+  - name: install epel-release
+    yum: name={{ item }} state=latest
+    with_items:
+     - epel-release
+  - name: install collectd
+    yum: name={{ item }} state=latest
+    with_items:
+     - collectd
+     - collectd-rrdtool
+  - name: copy collectd.conf
+    template: src=collectd.conf dest=/etc/collectd.conf
+  - name: copy init.d/collectd
+    template: src=collectd dest=/etc/init.d/collectd owner=root group=root mode=0755
+  - name: copy rc.d/init.d/collectd
+    template: src=collectd dest=/etc/rc.d/init.d/collectd owner=root group=root mode=0755
+    notify:
+     - restart collectd
+  - name: restart collectd
+    service: name=collectd state=restarted

@@ -1,0 +1,8 @@
+# hosts
+[centos]
+centos1 ansible_ssh_host=10.0.15.22 ansible_ssh_user=root ansible_ssh_pass=vagrant hostname=centos1
+centos2 ansible_ssh_host=10.0.15.23 ansible_ssh_user=root ansible_ssh_pass=vagrant hostname=centos2
+centos3 ansible_ssh_host=10.0.15.15 ansible_ssh_user=root ansible_ssh_pass=vagrant hostname=centos3
+
+[centos:vars]
+server_ip=192.168.10.192
