@@ -1,0 +1,4 @@
+- hosts: collectdclient
+  roles:
+    - { role: centos, when: "ansible_distribution == 'CentOS'" }
+    - { role: ubuntu, when: "ansible_distribution == 'Ubuntu'" }

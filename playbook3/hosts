@@ -1,0 +1,10 @@
+# hosts
+[collectdclient]
+10.0.15.22 ansible_ssh_user=root ansible_ssh_pass=vagrant hostname=10.0.15.22
+10.0.15.23 ansible_ssh_user=root ansible_ssh_pass=vagrant hostname=10.0.15.23
+10.0.15.15 ansible_ssh_user=root ansible_ssh_pass=vagrant hostname=10.0.15.15
+10.0.15.19 ansible_ssh_user=root ansible_ssh_pass=vagrant hostname=10.0.15.19
+10.0.15.17 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant hostname=10.0.15.17
+
+[collectdclient:vars]
+server_ip=192.168.10.192
