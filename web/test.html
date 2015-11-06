@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+
+<script>
+document.write("<h1>This is a heading</h1>");
+document.write("<p>This is a paragraph.</p>");
+</script>
+
+<button type="button" onclick="alert('Welcome!')">click here</button>
+
+<p id="demo">
+JavaScript will change
+</p>
+
+<script>
+function myFunction()
+{
+x=document.getElementById("demo");  // 找到元素
+x.innerHTML="Hello JavaScript!";    // 改变内容
+}
+</script>
+
+<button type="button" onclick="myFunction()">change?</button>
+
+<script>
+alert("My First JavaScript");
+</script>
+
+<script>
+var carname1="Bill Gates";
+var carname2='Bill Gates';
+var answer1="Nice to meet you!";
+var answer2="He is called 'Bill'";
+var answer3='He is called "Bill"';
+
+document.write(carname1 + "<br>")
+document.write(carname2 + "<br>")
+document.write(answer1 + "<br>")
+document.write(answer2 + "<br>")
+document.write(answer3 + "<br>")
+</script>
+
+<button onclick="myFunction('Bill Gates','CEO')">click</button>
+
+<script>
+function myFunction(name,job)
+{
+alert("Welcome " + name + ", the " + job);
+}
+</script>
+</body>
+</html>
