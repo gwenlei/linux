@@ -1,0 +1,45 @@
+<html>
+<head>
+<title></title>
+</head>
+<body>
+<form action="/build" method="post">
+ostype:
+<br />
+<select name="ostype">
+<option value="CentOS6.6">CentOS6.6</option>
+<option value="CentOS6.7">CentOS6.7</option>
+<option value="CentOS7.1">CentOS7.1</option>
+<option value="Ubuntu12.04">Ubuntu12.04</option>
+<option value="Ubuntu14.04">Ubuntu14.04</option>
+<option value="OpenSuse13.2">OpenSuse13.2</option>
+<option value="Windows7">Windows7</option>
+<option value="Windows2012">Windows2012</option>
+</select>
+<br />
+disksize:
+<br />
+<input type="radio" name="disksize" value="default" /> default
+<br />
+<input type="radio" name="disksize" value="custom" /> custom
+<input type="checkbox" name="customdisksize" value="root" /> root
+size:<input type="text" name="rootsize" />
+<input type="checkbox" name="customdisksize" value="home" /> home
+size:<input type="text" name="homesize" />
+<br />
+software:
+<br />
+<input type="checkbox" name="software" value="mysql" /> mysql
+<br />
+<input type="checkbox" name="software" value="wordpress" /> wordpress
+<br />
+service:
+<br />
+<input type="checkbox" name="service" value="iptables" /> iptables
+<br />
+<input type="checkbox" name="service" value="network" /> network
+<br />
+<input type="submit" value="Submit" />
+</form>
+</body>
+</html>
