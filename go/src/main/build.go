@@ -6,6 +6,9 @@ import (
     "log"
     "net/http"
     "strings"
+    "os"
+    "bufio"
+    "io"
 )
 
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
@@ -35,6 +38,16 @@ func login(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func main() {
+    http.HandleFunc("/", sayhelloName)       //设置访问的路由
+    http.HandleFunc("/login", login)         //设置访问的路由
+    http.HandleFunc("/build", build)         //设置访问的路由
+    err := http.ListenAndServe(":9090", nil) //设置监听的端口
+    if err != nil {
+        log.Fatal("ListenAndServe: ", err)
+    }
+}
+
 func build(w http.ResponseWriter, r *http.Request) {
     fmt.Println("method:", r.Method) //获取请求的方法
     if r.Method == "GET" {
@@ -55,15 +68,34 @@ func build(w http.ResponseWriter, r *http.Request) {
         fmt.Println("val:", strings.Join(v, " "))
         }
         fmt.Println("cloudstackip:", r.Form.Get("cloudstackip"))
+        json:= buildjson(r)
+        callpacker(json)
     }
 }
 
-func main() {
-    http.HandleFunc("/", sayhelloName)       //设置访问的路由
-    http.HandleFunc("/login", login)         //设置访问的路由
-    http.HandleFunc("/build", build)         //设置访问的路由
-    err := http.ListenAndServe(":9090", nil) //设置监听的端口
-    if err != nil {
-        log.Fatal("ListenAndServe: ", err)
-    }
+func buildjson(r *http.Request)(json string){
+     jsondir:="result/test2"
+     os.MkdirAll(jsondir, 0777)
+     json="result/test2/test2.json"
+     f,_:=os.Create(json)
+     f.WriteString("just a test")
+     template:="template/json/centos6-6.json"
+     ft,_:=os.Open(template)
+     buf:=bufio.NewReader(ft)
+     for {
+      line,err := buf.ReadString('\n')
+      if err== io.EOF{
+        break
+      }
+      f.WriteString(line)
+     }
+
+     fmt.Println(json)
+     defer ft.Close()
+     defer f.Close()
+     return json
+}
+
+func callpacker(json string){
+     fmt.Println("callpacker",json)
 }
