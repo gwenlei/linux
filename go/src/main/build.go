@@ -11,6 +11,13 @@ import (
 	"strings"
 )
 
+var dirmap = map[string]string{
+	"json":   "template/json/",
+	"cfg":    "template/cfg/",
+	"script": "template/script",
+	"iso":    "template/iso",
+	"result": "result",
+}
 var jsonmap = map[string]string{
 	"CentOS6.6":    "centos6-6.json",
 	"CentOS6.7":    "centos6-7.json",
@@ -79,23 +86,23 @@ func build(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func buildjson(r *http.Request) (json string) {
-	jsondir := "result/test3/"
-	os.MkdirAll(jsondir, 0777)
-	json = "test1.json"
-	json = jsondir + json
-	f, _ := os.Create(json)
+func buildjson(r *http.Request) (result string) {
+	resultdir := dirmap["result"] + "test3/"
+	os.MkdirAll(resultdir, 0777)
+	result = "test1.json"
+	result = resultdir + result
+	f, _ := os.Create(result)
 	f.WriteString("just a test")
-	templatedir := "template/json/"
-	template := jsonmap[r.Form.Get("ostype")]
-	template = templatedir + template
-	cfgdir := "template/cfg/"
+	jsondir := dirmap["json"]
+	json := jsonmap[r.Form.Get("ostype")]
+	json = jsondir + json
+	cfgdir := dirmap["cfg"]
 	cfg := cfgmap[r.Form.Get("ostype")]
 	cfg = cfgdir + cfg
-	isodir := "template/iso/"
+	isodir := dirmap["iso"]
 	iso := isomap[r.Form.Get("ostype")]
 	iso = isodir + iso
-	scriptdir := "template/script/"
+	scriptdir := dirmap["script"]
 	var script = make([]string, 10)
 	n := copy(script, r.Form["software"])
 	fmt.Println("n=", n)
@@ -107,7 +114,7 @@ func buildjson(r *http.Request) (json string) {
 			break
 		}
 	}
-	ft, _ := os.Open(template)
+	ft, _ := os.Open(json)
 	buf := bufio.NewReader(ft)
 	for {
 		line, err := buf.ReadString('\n')
@@ -117,13 +124,14 @@ func buildjson(r *http.Request) (json string) {
 		f.WriteString(line)
 	}
 
+	fmt.Println(result)
 	fmt.Println(json)
 	fmt.Println(cfg)
 	fmt.Println(script)
 	fmt.Println(iso)
 	defer ft.Close()
 	defer f.Close()
-	return json
+	return result
 }
 
 func callpacker(json string) {
