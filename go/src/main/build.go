@@ -14,9 +14,9 @@ import (
 var dirmap = map[string]string{
 	"json":   "template/json/",
 	"cfg":    "template/cfg/",
-	"script": "template/script",
-	"iso":    "template/iso",
-	"result": "result",
+	"script": "template/script/",
+	"iso":    "template/iso/",
+	"result": "result/",
 }
 var jsonmap = map[string]string{
 	"CentOS6.6":    "centos6-6.json",
@@ -69,20 +69,12 @@ func build(w http.ResponseWriter, r *http.Request) {
 	} else {
 		//请求的是登陆数据，那么执行登陆的逻辑判断
 		r.ParseForm()
-		fmt.Println("ostype:", r.Form.Get("ostype"))
-		fmt.Println("disksize:", r.Form.Get("disksize"))
-		fmt.Println("software:", r.Form["software"])
-		fmt.Println("service:", r.Form["service"])
-		for _, v := range r.Form["software"] {
-			fmt.Println("v:=", v)
-		}
 		for k, v := range r.Form {
-			fmt.Println("key:", k)
-			fmt.Println("val:", strings.Join(v, " "))
+			fmt.Println(k,":", strings.Join(v, " "))
 		}
-		fmt.Println("cloudstackip:", r.Form.Get("cloudstackip"))
 		json := buildjson(r)
-		callpacker(json)
+		fmt.Println(json)
+                //callpacker(json)
 	}
 }
 
