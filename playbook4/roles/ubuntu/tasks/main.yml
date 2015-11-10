@@ -1,0 +1,21 @@
+  - name: copy collectd_5.4.0-3ubuntu2_amd64.deb
+    sudo: yes
+    copy: src=collectd_5.4.0-3ubuntu2_amd64.deb dest=/root/collectd_5.4.0-3ubuntu2_amd64.deb mode=0755
+  - name: copy collectd.d
+    sudo: yes
+    copy: src=collectd.d/ dest=/etc/collectd/collectd.conf.d/
+  - name: copy collectd-core_5.4.0-3ubuntu2_amd64.deb
+    sudo: yes
+    copy: src=collectd-core_5.4.0-3ubuntu2_amd64.deb dest=/root/collectd-core_5.4.0-3ubuntu2_amd64.deb mode=0755
+  - name: install collectd_5.4.0-3ubuntu2_amd64.deb
+    sudo: yes
+    apt: deb=/root/collectd_5.4.0-3ubuntu2_amd64.deb
+  - name: install collectd-core_5.4.0-3ubuntu2_amd64.deb
+    sudo: yes
+    apt: deb=/root/collectd-core_5.4.0-3ubuntu2_amd64.deb
+  - name: copy collectd.conf
+    sudo: yes
+    template: src=collectd.conf dest=/etc/collectd/collectd.conf
+  - name: start collectd
+    sudo: yes
+    service: name=collectd state=restarted

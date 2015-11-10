@@ -1,0 +1,24 @@
+  - name: upload rpm
+    copy: src=rpm71b dest=/root mode=755
+  - name: copy collectd.d
+    copy: src=collectd.d/ dest=/etc/collectd.d/ mode=755
+  - name: install createrepo
+    yum: name=/root/rpm71b/packages/createrepo-0.9.9-23.el7.noarch.rpm state=present
+  - name: createrepo
+    command: createrepo /root/rpm71b
+  - name: import RPM-GPG-KEY-EPEL-7
+    command: rpm --import /root/rpm71b/RPM-GPG-KEY-EPEL-7
+  - name: copy collectd.repo
+    template: src=collectd.repo dest=/etc/yum.repos.d/collectd.repo
+  - name: install collectd*
+    yum: name=collectd* state=latest
+  - name: copy collectd.conf
+    template: src=collectd.conf dest=/etc/collectd.conf
+  - name: copy init.d/collectd
+    template: src=collectd dest=/etc/init.d/collectd owner=root group=root mode=0755
+  - name: copy rc.d/init.d/collectd
+    template: src=collectd dest=/etc/rc.d/init.d/collectd owner=root group=root mode=0755
+    notify:
+     - restart collectd
+  - name: restart collectd
+    service: name=collectd state=restarted
