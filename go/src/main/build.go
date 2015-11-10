@@ -1,101 +1,139 @@
 package main
 
 import (
-    "fmt"
-    "html/template"
-    "log"
-    "net/http"
-    "strings"
-    "os"
-    "bufio"
-    "io"
+	"bufio"
+	"fmt"
+	"html/template"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"strings"
 )
 
-func sayhelloName(w http.ResponseWriter, r *http.Request) {
-    r.ParseForm()         //解析url传递的参数，对于POST则解析响应包的主体（request body）
-    //注意:如果没有调用ParseForm方法，下面无法获取表单的数据
-    fmt.Println(r.Form)   //这些信息是输出到服务器端的打印信息
-    fmt.Println("path", r.URL.Path)
-    fmt.Println("scheme", r.URL.Scheme)
-    fmt.Println(r.Form["url_long"])
-    for k, v := range r.Form {
-        fmt.Println("key:", k)
-        fmt.Println("val:", strings.Join(v, ""))
-    }
-    fmt.Fprintf(w, "Hello astaxie!") //这个写入到w的是输出到客户端的
+var jsonmap = map[string]string{
+	"CentOS6.6":    "centos6-6.json",
+	"CentOS6.7":    "centos6-7.json",
+	"CentOS7.1":    "centos7-1.json",
+	"Ubuntu12.04":  "ubuntu12-04.json",
+	"Ubuntu14.04":  "ubuntu14-04.json",
+	"OpenSuse13.2": "opensuse13-2.json",
+	"Windows7":     "windows7.json",
+	"Windows2012":  "windows2012.json",
 }
-
-func login(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("method:", r.Method) //获取请求的方法
-    if r.Method == "GET" {
-        t, _ := template.ParseFiles("login.gtpl")
-        t.Execute(w, nil)
-    } else {
-        //请求的是登陆数据，那么执行登陆的逻辑判断
-        r.ParseForm()
-        fmt.Println("username:", r.Form["username"])
-        fmt.Println("password:", r.Form["password"])
-    }
+var cfgmap = map[string]string{
+	"CentOS6.6":    "centos6-6.cfg",
+	"CentOS6.7":    "centos6-7.cfg",
+	"CentOS7.1":    "centos7-1.cfg",
+	"Ubuntu12.04":  "ubuntu12-04.cfg",
+	"Ubuntu14.04":  "ubuntu14-04.cfg",
+	"OpenSuse13.2": "opensuse13-2.cfg",
+	"Windows7":     "windows7.cfg",
+	"Windows2012":  "windows2012.cfg",
+}
+var isomap = map[string]string{
+	"CentOS6.6":    "centos6-6.iso",
+	"CentOS6.7":    "centos6-7.iso",
+	"CentOS7.1":    "centos7-1.iso",
+	"Ubuntu12.04":  "ubuntu12-04.iso",
+	"Ubuntu14.04":  "ubuntu14-04.iso",
+	"OpenSuse13.2": "opensuse13-2.iso",
+	"Windows7":     "windows7.iso",
+	"Windows2012":  "windows2012.iso",
+}
+var scriptmap = map[string]string{
+	"mysql":     "mysql.sh",
+	"wordpress": "wordpress.sh",
 }
 
 func main() {
-    http.HandleFunc("/", sayhelloName)       //设置访问的路由
-    http.HandleFunc("/login", login)         //设置访问的路由
-    http.HandleFunc("/build", build)         //设置访问的路由
-    err := http.ListenAndServe(":9090", nil) //设置监听的端口
-    if err != nil {
-        log.Fatal("ListenAndServe: ", err)
-    }
+	http.HandleFunc("/build", build)         //设置访问的路由
+	err := http.ListenAndServe(":9090", nil) //设置监听的端口
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }
 
 func build(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("method:", r.Method) //获取请求的方法
-    if r.Method == "GET" {
-        t, _ := template.ParseFiles("build.html")
-        t.Execute(w, nil)
-    } else {
-        //请求的是登陆数据，那么执行登陆的逻辑判断
-        r.ParseForm()
-        fmt.Println("ostype:", r.Form.Get("ostype"))
-        fmt.Println("disksize:", r.Form.Get("disksize"))
-        fmt.Println("software:", r.Form["software"])
-        fmt.Println("service:", r.Form["service"])
-        for _,v:=range r.Form["software"]{
-          fmt.Println("v:=",v)
-        }
-        for k, v := range r.Form {
-        fmt.Println("key:", k)
-        fmt.Println("val:", strings.Join(v, " "))
-        }
-        fmt.Println("cloudstackip:", r.Form.Get("cloudstackip"))
-        json:= buildjson(r)
-        callpacker(json)
-    }
+	fmt.Println("method:", r.Method) //获取请求的方法
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("build.html")
+		t.Execute(w, nil)
+	} else {
+		//请求的是登陆数据，那么执行登陆的逻辑判断
+		r.ParseForm()
+		fmt.Println("ostype:", r.Form.Get("ostype"))
+		fmt.Println("disksize:", r.Form.Get("disksize"))
+		fmt.Println("software:", r.Form["software"])
+		fmt.Println("service:", r.Form["service"])
+		for _, v := range r.Form["software"] {
+			fmt.Println("v:=", v)
+		}
+		for k, v := range r.Form {
+			fmt.Println("key:", k)
+			fmt.Println("val:", strings.Join(v, " "))
+		}
+		fmt.Println("cloudstackip:", r.Form.Get("cloudstackip"))
+		json := buildjson(r)
+		callpacker(json)
+	}
 }
 
-func buildjson(r *http.Request)(json string){
-     jsondir:="result/test2"
-     os.MkdirAll(jsondir, 0777)
-     json="result/test2/test2.json"
-     f,_:=os.Create(json)
-     f.WriteString("just a test")
-     template:="template/json/centos6-6.json"
-     ft,_:=os.Open(template)
-     buf:=bufio.NewReader(ft)
-     for {
-      line,err := buf.ReadString('\n')
-      if err== io.EOF{
-        break
-      }
-      f.WriteString(line)
-     }
+func buildjson(r *http.Request) (json string) {
+	jsondir := "result/test3/"
+	os.MkdirAll(jsondir, 0777)
+	json = "test1.json"
+	json = jsondir + json
+	f, _ := os.Create(json)
+	f.WriteString("just a test")
+	templatedir := "template/json/"
+	template := jsonmap[r.Form.Get("ostype")]
+	template = templatedir + template
+	cfgdir := "template/cfg/"
+	cfg := cfgmap[r.Form.Get("ostype")]
+	cfg = cfgdir + cfg
+	isodir := "template/iso/"
+	iso := isomap[r.Form.Get("ostype")]
+	iso = isodir + iso
+	scriptdir := "template/script/"
+	var script = make([]string, 10)
+	n := copy(script, r.Form["software"])
+	fmt.Println("n=", n)
+	for k, v := range script {
+		fmt.Println(k, v)
+		script[k] = scriptdir + scriptmap[v]
+		n = n - 1
+		if n == 0 {
+			break
+		}
+	}
+	ft, _ := os.Open(template)
+	buf := bufio.NewReader(ft)
+	for {
+		line, err := buf.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
+		f.WriteString(line)
+	}
 
-     fmt.Println(json)
-     defer ft.Close()
-     defer f.Close()
-     return json
+	fmt.Println(json)
+	fmt.Println(cfg)
+	fmt.Println(script)
+	fmt.Println(iso)
+	defer ft.Close()
+	defer f.Close()
+	return json
 }
 
-func callpacker(json string){
-     fmt.Println("callpacker",json)
+func callpacker(json string) {
+	fmt.Println("callpacker", json)
+	attr := &os.ProcAttr{
+		Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+	}
+	p, err := os.StartProcess("/home/packerdir/packer", []string{"/home/packerdir/packer", "build", "/home/jsondir/centos66.json"}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
 }
