@@ -22,47 +22,30 @@ disksize:<input type="text" name="disksize">G
 partition:
 <input type=button value=add onclick="addtext(this)">
 <div id="div1">
-<p id="p1">name:size</p>
+<div id="partdiv">
+name:<input type="text" name="part">size:<input type="text" name="size">G<input type=button value=delete onclick="deletetext(this)">
+</div>
 </div>
 <script>
-var num=0;
+var num=2;
 function addtext(id)
 {
-var para=document.createElement("p");
-var atext=document.createElement("a");
-atext.id="atext";
-atext.id=atext.id.concat(num.toString());
-atext.value="name";
-atext.style.color="green"
-var part=document.createElement("input");
-part.type="text";
-part.id="part";
-part.id=part.id.concat(num.toString());
-part.name=part.id;
-var size=document.createElement("input");
-size.type="text";
-size.id="size";
-size.id=size.id.concat(num.toString());
-size.name=size.id;
-var button=document.createElement("input");
-button.type="button";
-button.value="delete";
-button.id="button";
-button.id=button.id.concat(num.toString());
-button.name=button.id;
-button.onclick=function(){deletetext(part.id,size.id,button.id)};
-para.appendChild(atext);
-para.appendChild(part);
-para.appendChild(size);
-para.appendChild(button);
-var element=document.getElementById("div1");
-element.appendChild(para);
+var opartdiv=document.getElementById("partdiv"); 
+var partdiv=document.createElement("div");
+partdiv.id="partdiv";
+partdiv.id=partdiv.id.concat(num.toString());
+partdiv.innerHTML=opartdiv.innerHTML; 
+document.getElementById("div1").appendChild(partdiv);
 num=num+1;
 }
-function deletetext(part,size,button){
-document.getElementById(part).parentNode.removeChild(document.getElementById(part)); 
-document.getElementById(size).parentNode.removeChild(document.getElementById(size)); 
-document.getElementById(button).parentNode.removeChild(document.getElementById(button));
+function deletetext(obj){
+    var strid=obj.id;  
+    var o=document.getElementById(strid);  
+    var z=o.parentElement;  
+    var stridone=z.id;  
+    var my = document.getElementById(stridone);  
+    if (my != null){  
+    my.parentNode.removeChild(my);}  
 }
 </script>
 <br />

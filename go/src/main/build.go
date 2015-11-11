@@ -48,6 +48,16 @@ var isomap = map[string]string{
 	"Windows7":     "windows7.iso",
 	"Windows2012":  "windows2012.iso",
 }
+var md5map = map[string]string{
+	"centos6-6.iso":    "12345",
+	"centos6-7.iso":    "12345",
+	"centos7-1.iso":    "12345",
+	"ubuntu12-04.iso":  "12345",
+	"ubuntu14-04.iso":  "12345",
+	"opensuse13-2.iso": "12345",
+	"windows7.iso":     "12345",
+	"windows2012.iso":  "12345",
+}
 var scriptmap = map[string]string{
 	"mysql":     "mysql.sh",
 	"wordpress": "wordpress.sh",
@@ -70,62 +80,87 @@ func build(w http.ResponseWriter, r *http.Request) {
 		//请求的是登陆数据，那么执行登陆的逻辑判断
 		r.ParseForm()
 		for k, v := range r.Form {
-			fmt.Println(k,":", strings.Join(v, " "))
+			fmt.Println(k, ":", strings.Join(v, " "))
 		}
 		json := buildjson(r)
 		fmt.Println(json)
-                //callpacker(json)
+		//callpacker(json)
 	}
 }
 
 func buildjson(r *http.Request) (result string) {
 	resultdir := dirmap["result"] + "test3/"
 	os.MkdirAll(resultdir, 0777)
-	result = "test1.json"
-	result = resultdir + result
-	f, _ := os.Create(result)
-	f.WriteString("just a test")
 	jsondir := dirmap["json"]
 	json := jsonmap[r.Form.Get("ostype")]
+	newjson := resultdir + json
 	json = jsondir + json
 	cfgdir := dirmap["cfg"]
 	cfg := cfgmap[r.Form.Get("ostype")]
+	newcfg := resultdir + cfg
 	cfg = cfgdir + cfg
 	isodir := dirmap["iso"]
 	iso := isomap[r.Form.Get("ostype")]
 	iso = isodir + iso
-	scriptdir := dirmap["script"]
-	var script = make([]string, 10)
-	n := copy(script, r.Form["software"])
-	fmt.Println("n=", n)
-	for k, v := range script {
-		fmt.Println(k, v)
-		script[k] = scriptdir + scriptmap[v]
-		n = n - 1
-		if n == 0 {
-			break
-		}
-	}
-	ft, _ := os.Open(json)
-	buf := bufio.NewReader(ft)
+	newjsonf, _ := os.Create(newjson)
+	jsonf, _ := os.Open(json)
+	buf := bufio.NewReader(jsonf)
 	for {
 		line, err := buf.ReadString('\n')
 		if err == io.EOF {
 			break
 		}
-		f.WriteString(line)
+		line = strings.Replace(line, "DISK_SIZE", r.Form.Get("disksize"), -1)
+		line = strings.Replace(line, "SSH_USERNAME", r.Form.Get("user"), -1)
+		line = strings.Replace(line, "SSH_PASSWORD", r.Form.Get("password"), -1)
+		line = strings.Replace(line, "VM_NAME", r.Form.Get("ostype"), -1)
+		line = strings.Replace(line, "OUTPUT_DIRECTORY", resultdir+"output", -1)
+		line = strings.Replace(line, "ISO_CHECKSUM", md5map[isomap[r.Form.Get("ostype")]], -1)
+		line = strings.Replace(line, "ISO_URL", iso, -1)
+		line = strings.Replace(line, "KS", newcfg, -1)
+		newjsonf.WriteString(line)
 	}
-
-	fmt.Println(result)
+	scriptdir := dirmap["script"]
+	var script = make([]string, 10)
+	n := copy(script, r.Form["software"])
+	fmt.Println("n=", n)
+        
+        if n>0 {
+        var scriptfiles string
+	for k, v := range script {
+		fmt.Println(k, v)
+		script[k] = scriptdir +scriptmap[v]
+                scriptfiles=scriptfiles+ "\""+script[k]+ "\""
+		n = n - 1
+		if n == 0 {
+			break
+		}
+                scriptfiles=scriptfiles+","
+	}
+        fmt.Println("scriptfiles=", scriptfiles)
+          newjsonf.WriteString(",\n")
+          provisionersf, _ := os.Open(jsondir+"provisioners.json")
+	  buf = bufio.NewReader(provisionersf)
+	  for {
+		line, err := buf.ReadString('\n')
+                if err == io.EOF {
+			break
+		}
+                line = strings.Replace(line, "SCRIPTFILES", scriptfiles, -1)
+                line = strings.Replace(line, "SSH_PASSWORD", r.Form.Get("password"), -1)
+		newjsonf.WriteString(line)
+          }
+        }
+        newjsonf.WriteString("}")
 	fmt.Println(json)
 	fmt.Println(cfg)
 	fmt.Println(script)
 	fmt.Println(iso)
-	defer ft.Close()
-	defer f.Close()
+	fmt.Println(newjson)
+	defer jsonf.Close()
+	defer newjsonf.Close()
 	return result
 }
-
 func callpacker(json string) {
 	fmt.Println("callpacker", json)
 	attr := &os.ProcAttr{
