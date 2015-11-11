@@ -20,8 +20,51 @@ ostype:
 disksize:<input type="text" name="disksize">G
 <br />
 partition:
-<br />
-name:<input type="text" name="part1">size:<input type="text" name="part1size">G
+<input type=button value=add onclick="addtext(this)">
+<div id="div1">
+<p id="p1">name:size</p>
+</div>
+<script>
+var num=0;
+function addtext(id)
+{
+var para=document.createElement("p");
+var atext=document.createElement("a");
+atext.id="atext";
+atext.id=atext.id.concat(num.toString());
+atext.value="name";
+atext.style.color="green"
+var part=document.createElement("input");
+part.type="text";
+part.id="part";
+part.id=part.id.concat(num.toString());
+part.name=part.id;
+var size=document.createElement("input");
+size.type="text";
+size.id="size";
+size.id=size.id.concat(num.toString());
+size.name=size.id;
+var button=document.createElement("input");
+button.type="button";
+button.value="delete";
+button.id="button";
+button.id=button.id.concat(num.toString());
+button.name=button.id;
+button.onclick=function(){deletetext(part.id,size.id,button.id)};
+para.appendChild(atext);
+para.appendChild(part);
+para.appendChild(size);
+para.appendChild(button);
+var element=document.getElementById("div1");
+element.appendChild(para);
+num=num+1;
+}
+function deletetext(part,size,button){
+document.getElementById(part).parentNode.removeChild(document.getElementById(part)); 
+document.getElementById(size).parentNode.removeChild(document.getElementById(size)); 
+document.getElementById(button).parentNode.removeChild(document.getElementById(button));
+}
+</script>
 <br />
 user:<input type="text" name="user">
 <br />
