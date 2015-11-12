@@ -5,7 +5,6 @@
 <body>
 <form action="/build" method="post">
 ostype:
-<br />
 <select name="ostype">
 <option value="CentOS6.6">CentOS6.6</option>
 <option value="CentOS6.7">CentOS6.7</option>
@@ -17,30 +16,35 @@ ostype:
 <option value="Windows2012">Windows2012</option>
 </select>
 <br />
-disksize:<input type="text" name="disksize">G
+disksize:<input type="text" name="disksize" value="6">G
 <br />
 partition:
-<input type=button value=add onclick="addtext(this)">
+<input type=button value=add onclick="addtext('partdiv')">
 <div id="div1">
 <div id="partdiv">
-name:<input type="text" name="part">size:<input type="text" name="size">G<input type=button value=delete onclick="deletetext(this)">
+name:<input type="text" name="part" value="/">size:<input type="text" name="size" value="5">G
 </div>
 </div>
 <script>
-var num=2;
+var num=1;
 function addtext(id)
 {
-var opartdiv=document.getElementById("partdiv"); 
+var opartdiv=document.getElementById(id); 
 var partdiv=document.createElement("div");
-partdiv.id="partdiv";
-partdiv.id=partdiv.id.concat(num.toString());
+partdiv.id=opartdiv.id.concat(num.toString());
 partdiv.innerHTML=opartdiv.innerHTML; 
 document.getElementById("div1").appendChild(partdiv);
+var partbutton=document.createElement("input");
+partbutton.id="delete"+num;
+partbutton.type="button";
+partbutton.value="delete";
+partbutton.onclick=function(){deletetext(this)};
+document.getElementById(partdiv.id).appendChild(partbutton);
 num=num+1;
 }
 function deletetext(obj){
     var strid=obj.id;  
-    var o=document.getElementById(strid);  
+    var o=document.getElementById(obj.id);  
     var z=o.parentElement;  
     var stridone=z.id;  
     var my = document.getElementById(stridone);  
@@ -49,9 +53,9 @@ function deletetext(obj){
 }
 </script>
 <br />
-user:<input type="text" name="user">
+user:<input type="text" name="user" value="root">
 <br />
-password:<input type="text" name="password">
+password:<input type="text" name="password" value="engine">
 <br />
 software:
 <br />
@@ -64,6 +68,9 @@ service:
 <input type="checkbox" name="service" value="iptables" /> iptables
 <br />
 <input type="checkbox" name="service" value="network" /> network
+<br />
+headless:<input type="radio" name="headless" value="true"/> true
+<input type="radio" name="headless" value="false" checked/> false
 <br />
 cloudstack ip:<input type="text" name="cloudstackip">
 <br />

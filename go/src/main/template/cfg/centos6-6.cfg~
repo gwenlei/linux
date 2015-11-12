@@ -37,7 +37,11 @@ zerombr
 clearpart --all  --drives=vda
 
 # Disk partitioning information
-PARTITIONS
+part /boot --fstype="ext4" --size=500
+part pv.008002 --grow --size=1
+volgroup vg_centos --pesize=4096 pv.008002
+logvol / --fstype=ext4 --name=lv_root --vgname=vg_centos --grow --size=1024 --maxsize=51200
+logvol swap --name=lv_swap --vgname=vg_centos --grow --size=1024 --maxsize=1024
 
 %packages --nobase
 coreutils
@@ -58,5 +62,4 @@ cd /etc/udev/rules.d
 rm -f 70-persistent-net.rules
 rm -f 75-persistent-net-generator.rules
 echo "# " > 75-persistent-net-generator.rules
-sed -i "s/^.*requiretty/#Defaults requiretty/" /etc/sudoers
 %end

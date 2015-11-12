@@ -8,7 +8,7 @@
       "iso_checksum_type": "md5",
       "output_directory": "OUTPUT_DIRECTORY",
       "ssh_wait_timeout": "30s",
-      "shutdown_command": "shutdown -P now",
+      "shutdown_command": "passwd -e root && shutdown -P now",
       "disk_size": DISK_SIZE,
       "format": "qcow2",
       "headless": HEADLESS,
@@ -25,9 +25,6 @@
       "vm_name": "VM_NAME",
       "net_device": "virtio-net",
       "disk_interface": "virtio",
-      "qemuargs": [
-         [ "-m", "1024M" ]
-      ],
       "boot_wait": "5s",
       "boot_command":
       [
