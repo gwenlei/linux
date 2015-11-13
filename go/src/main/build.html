@@ -1,6 +1,7 @@
 <html>
 <head>
 <title></title>
+<script type="text/javascript" src="/static/js/test.js"></script>
 </head>
 <body>
 <form action="/build" method="post">
@@ -16,42 +17,15 @@ ostype:
 <option value="Windows2012">Windows2012</option>
 </select>
 <br />
-disksize:<input type="text" name="disksize" value="6">G
+disksize:<input type="text" name="disksize" size="6" value="6">G
 <br />
 partition:
 <input type=button value=add onclick="addtext('partdiv')">
 <div id="div1">
 <div id="partdiv">
-name:<input type="text" name="part" value="/">size:<input type="text" name="size" value="5">G
+name:<input type="text" name="part" size="10" value="/">size:<input type="text" name="size" size="6" value="5">G
 </div>
 </div>
-<script>
-var num=1;
-function addtext(id)
-{
-var opartdiv=document.getElementById(id); 
-var partdiv=document.createElement("div");
-partdiv.id=opartdiv.id.concat(num.toString());
-partdiv.innerHTML=opartdiv.innerHTML; 
-document.getElementById("div1").appendChild(partdiv);
-var partbutton=document.createElement("input");
-partbutton.id="delete"+num;
-partbutton.type="button";
-partbutton.value="delete";
-partbutton.onclick=function(){deletetext(this)};
-document.getElementById(partdiv.id).appendChild(partbutton);
-num=num+1;
-}
-function deletetext(obj){
-    var strid=obj.id;  
-    var o=document.getElementById(obj.id);  
-    var z=o.parentElement;  
-    var stridone=z.id;  
-    var my = document.getElementById(stridone);  
-    if (my != null){  
-    my.parentNode.removeChild(my);}  
-}
-</script>
 <br />
 user:<input type="text" name="user" value="root">
 <br />
