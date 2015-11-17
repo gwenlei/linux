@@ -64,9 +64,10 @@ var scriptmap = map[string]string{
 }
 var httpmap = map[string]string{
 	"http://192.168.0.82/cfg/": "/home/html/cfg/",
+        "http://192.168.0.82:9090/static/cfg/": "static/cfg/",
 }
 var resultmap = map[string]string{
-	"http":      "http://192.168.0.82/cfg/",
+	"http":      "http://192.168.0.82:9090/static/cfg/",
 	"output":    "/home/code/mycode/go/src/main/result/test3/output/",
 	"jsondir":   "/home/code/mycode/go/src/main/result/test3/",
 	"scriptdir": "/home/code/mycode/go/src/main/result/test3/script/",
@@ -92,16 +93,16 @@ func build(w http.ResponseWriter, r *http.Request) {
 		for k, v := range r.Form {
 			fmt.Println(k, ":", strings.Join(v, " "))
 		}
-	//	json := buildjson(r)
-	//	fmt.Println("buildjson end", json)
-	//	callpacker(json)
+		json := buildjson(r)
+		fmt.Println("buildjson end", json)
+		go callpacker(json)
 	}
 }
 
 func buildjson(r *http.Request) (result string) {
 	os.MkdirAll(resultmap["jsondir"], 0777)
-	os.MkdirAll(resultmap["cfgdir"], 0777)
 	os.MkdirAll(resultmap["scriptdir"], 0777)
+        os.MkdirAll(httpmap[resultmap["http"]], 0777)
 	jsondir := dirmap["json"]
 	json := jsonmap[r.Form.Get("ostype")]
 	newjson := resultmap["jsondir"] + json
