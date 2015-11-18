@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"html/template"
 	"io"
@@ -10,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+        "io/ioutil"
 )
 
 var dirmap = map[string]string{
@@ -68,17 +68,42 @@ var httpmap = map[string]string{
 }
 var resultmap = map[string]string{
 	"http":      "http://192.168.0.82:9090/static/cfg/",
-	"output":    "/home/code/mycode/go/src/main/result/test3/output/",
-	"jsondir":   "/home/code/mycode/go/src/main/result/test3/",
-	"scriptdir": "/home/code/mycode/go/src/main/result/test3/script/",
+	"outputdir":    "static/result/test3/output/",
+        "outputimage":    "centos66.qcow2",
+	"jsondir":   "static/result/test3/",
+	"scriptdir": "static/result/test3/script/",
+}
+var logmap = map[string]string{
+"1":"7574",
 }
 
 func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+        http.HandleFunc("/", sayHelloName)
 	http.HandleFunc("/build", build)         //设置访问的路由
+        http.HandleFunc("/setting", setting)
 	err := http.ListenAndServe(":9090", nil) //设置监听的端口
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
+	}
+}
+
+func sayHelloName(w http.ResponseWriter, r *http.Request) {
+
+        fmt.Fprintf(w, "hello, world")
+}
+
+func setting(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method) //获取请求的方法
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("setting.html")
+		t.Execute(w, nil)
+	} else {
+		//请求的是登陆数据，那么执行登陆的逻辑判断
+		r.ParseForm()
+		for k, v := range r.Form {
+			fmt.Println(k, ":", strings.Join(v, " "))
+		}
 	}
 }
 
@@ -95,8 +120,14 @@ func build(w http.ResponseWriter, r *http.Request) {
 		}
 		json := buildjson(r)
 		fmt.Println("buildjson end", json)
-		go callpacker(json)
-	}
+                p:=callpacker(json)
+		fmt.Fprintf(w, strconv.Itoa(p.Pid)+" packer running")
+                if r.Form.Get("compat")=="0.1"{
+                  output:=resultmap["outputdir"]+resultmap["outputimage"]
+                  newoutput:=resultmap["outputdir"]+"tr"+resultmap["outputimage"]
+                  go calltransform(p,output,newoutput)
+                }
+         }
 }
 
 func buildjson(r *http.Request) (result string) {
@@ -118,27 +149,18 @@ func buildjson(r *http.Request) (result string) {
 	disksizen, _ := strconv.Atoi(r.Form.Get("disksize"))
 	disksizens := strconv.Itoa(disksizen * 1024)
 	//new json file
-	newjsonf, _ := os.Create(newjson)
-	defer newjsonf.Close()
-	jsonf, _ := os.Open(json)
-	buf := bufio.NewReader(jsonf)
-	defer jsonf.Close()
-	for {
-		line, err := buf.ReadString('\n')
-		if err == io.EOF {
-			break
-		}
+        os.Create(newjson)
+	buf,_:= ioutil.ReadFile(json)
+          line:= string(buf)
 		line = strings.Replace(line, "DISK_SIZE", disksizens, -1)
 		line = strings.Replace(line, "SSH_USERNAME", r.Form.Get("user"), -1)
 		line = strings.Replace(line, "SSH_PASSWORD", r.Form.Get("password"), -1)
-		line = strings.Replace(line, "VM_NAME", r.Form.Get("ostype"), -1)
-		line = strings.Replace(line, "OUTPUT_DIRECTORY", resultmap["output"], -1)
+		line = strings.Replace(line, "VM_NAME", resultmap["outputimage"], -1)
+		line = strings.Replace(line, "OUTPUT_DIRECTORY", resultmap["outputdir"], -1)
 		line = strings.Replace(line, "ISO_CHECKSUM", md5map[isomap[r.Form.Get("ostype")]], -1)
 		line = strings.Replace(line, "ISO_URL", iso, -1)
 		line = strings.Replace(line, "KS_CFG", newcfgs, -1)
 		line = strings.Replace(line, "HEADLESS", r.Form.Get("headless"), -1)
-		newjsonf.WriteString(line)
-	}
 	scriptdir := dirmap["script"]
 	var script = make([]string, 10)
 	var newscript = make([]string, 10)
@@ -150,14 +172,7 @@ func buildjson(r *http.Request) (result string) {
 		// copy script
 		newbasescriptf, _ := os.Create(resultmap["scriptdir"] + "base.sh")
 		basescriptf, _ := os.Open(scriptdir + "base.sh")
-		buf := bufio.NewReader(basescriptf)
-		for {
-			line, err := buf.ReadString('\n')
-			if err == io.EOF {
-				break
-			}
-			newbasescriptf.WriteString(line)
-		}
+                io.Copy(newbasescriptf, basescriptf)
 		defer basescriptf.Close()
 		defer newbasescriptf.Close()
 		for k, v := range script {
@@ -169,14 +184,7 @@ func buildjson(r *http.Request) (result string) {
 			// copy script
 			newscriptf, _ := os.Create(newscript[k])
 			scriptf, _ := os.Open(script[k])
-			buf := bufio.NewReader(scriptf)
-			for {
-				line, err := buf.ReadString('\n')
-				if err == io.EOF {
-					break
-				}
-				newscriptf.WriteString(line)
-			}
+			io.Copy(newscriptf, scriptf)
 			defer scriptf.Close()
 			defer newscriptf.Close()
 
@@ -186,21 +194,13 @@ func buildjson(r *http.Request) (result string) {
 			scriptfiles = scriptfiles + ",\n"
 		}
 		fmt.Println("scriptfiles=", scriptfiles)
-		newjsonf.WriteString(",\n")
-		provisionersf, _ := os.Open(jsondir + "provisioners.json")
-		defer provisionersf.Close()
-		buf = bufio.NewReader(provisionersf)
-		for {
-			line, err := buf.ReadString('\n')
-			if err == io.EOF {
-				break
-			}
+		buf, _ := ioutil.ReadFile(jsondir + "provisioners.json")
+                line =line+ ",\n"+string(buf)
 			line = strings.Replace(line, "SCRIPTFILES", scriptfiles, -1)
 			line = strings.Replace(line, "SSH_PASSWORD", r.Form.Get("password"), -1)
-			newjsonf.WriteString(line)
-		}
 	}
-	newjsonf.WriteString("}")
+        line =line+ "}"
+        ioutil.WriteFile(newjson, []byte(line), 0)
 
 	// new cfg file part
 	var partitions string
@@ -209,21 +209,14 @@ func buildjson(r *http.Request) (result string) {
 		sizens := strconv.Itoa(sizen * 1024)
 		partitions = partitions + "part " + v + " --fstype=ext4 --size=" + sizens + "\n"
 	}
-	newcfgf, _ := os.Create(newcfg)
-	defer newcfgf.Close()
-	cfgf, _ := os.Open(cfg)
-	defer cfgf.Close()
-	buf = bufio.NewReader(cfgf)
-	for {
-		line, err := buf.ReadString('\n')
-		if err == io.EOF {
-			break
-		}
+        os.Create(newcfg)
+	buf, _ = ioutil.ReadFile(cfg)
+        line = string(buf)
 		line = strings.Replace(line, "SSH_USERNAME", r.Form.Get("user"), -1)
 		line = strings.Replace(line, "SSH_PASSWORD", r.Form.Get("password"), -1)
 		line = strings.Replace(line, "PARTITIONS", partitions, -1)
-		newcfgf.WriteString(line)
-	}
+		ioutil.WriteFile(newcfg, []byte(line), 0)
+	
 
 	fmt.Println(json)
 	fmt.Println(cfg)
@@ -232,14 +225,36 @@ func buildjson(r *http.Request) (result string) {
 	fmt.Println(newjson)
 	return newjson
 }
-func callpacker(json string) {
+func callpacker(json string) *os.Process {
 	fmt.Println("callpacker", json)
+        inf, _ := os.Create(resultmap["jsondir"]+"inf.log")
+        outf, _ := os.Create(resultmap["jsondir"]+"outf.log")
+        errf, _ := os.Create(resultmap["jsondir"]+"errf.log")
 	attr := &os.ProcAttr{
-		Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+		//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+                Files: []*os.File{inf, outf, errf},
 	}
 	p, err := os.StartProcess("/home/packerdir/packer", []string{"/home/packerdir/packer", "build", json}, attr)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	fmt.Println(p)
+	fmt.Println("p=[",p,"]")
+        return p
+}
+func calltransform(p *os.Process,output string,newoutput string) *os.Process {
+         p.Wait()
+ 	fmt.Println("calltransform", output,newoutput)
+        inf, _ := os.Create(resultmap["jsondir"]+"inf2.log")
+        outf, _ := os.Create(resultmap["jsondir"]+"outf2.log")
+        errf, _ := os.Create(resultmap["jsondir"]+"errf2.log")
+	attr := &os.ProcAttr{
+		//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+                Files: []*os.File{inf, outf, errf},
+	}
+	p2, err := os.StartProcess("/bin/qemu-img", []string{"/bin/qemu-img", "convert","-f", "qcow2",output,"-O", "qcow2", "-o", "compat=0.10",newoutput}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println("p2=[",p2,"]")
+        return p2
 }
