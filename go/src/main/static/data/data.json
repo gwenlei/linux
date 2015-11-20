@@ -1,0 +1,62 @@
+{"dirmap":{
+	"json":   "template/json/",
+	"cfg":    "template/cfg/",
+	"script": "template/script/",
+	"iso":    "/home/html/iso/"
+		},
+	"jsonmap":{
+		"CentOS6.6":    "centos6-6.json",
+	"CentOS6.7":    "centos6-7.json",
+	"CentOS7.1":    "centos7-1.json",
+	"Ubuntu12.04":  "ubuntu12-04.json",
+	"Ubuntu14.04":  "ubuntu14-04.json",
+	"OpenSuse13.2": "opensuse13-2.json",
+	"Windows7":     "windows7.json",
+	"Windows2012":  "windows2012.json"
+		},
+	"cfgmap":{
+		"CentOS6.6":    "centos6-6.cfg",
+	"CentOS6.7":    "centos6-7.cfg",
+	"CentOS7.1":    "centos7-1.cfg",
+	"Ubuntu12.04":  "ubuntu12-04.cfg",
+	"Ubuntu14.04":  "ubuntu14-04.cfg",
+	"OpenSuse13.2": "opensuse13-2.cfg",
+	"Windows7":     "windows7.cfg",
+	"Windows2012":  "windows2012.cfg"
+		},
+	"isomap":{
+		"CentOS6.6":    "CentOS-6.6-x86_64-bin-DVD1.iso",
+	"CentOS6.7":    "centos6-7.iso",
+	"CentOS7.1":    "centos7-1.iso",
+	"Ubuntu12.04":  "ubuntu12-04.iso",
+	"Ubuntu14.04":  "ubuntu14-04.iso",
+	"OpenSuse13.2": "opensuse13-2.iso",
+	"Windows7":     "windows7.iso",
+	"Windows2012":  "windows2012.iso"
+		},
+	"md5map": {
+		"CentOS-6.6-x86_64-bin-DVD1.iso": "7b1fb1a11499b31271ded79da6af8584",
+	"centos6-7.iso":                  "12345",
+	"centos7-1.iso":                  "12345",
+	"ubuntu12-04.iso":                "12345",
+	"ubuntu14-04.iso":                "12345",
+	"opensuse13-2.iso":               "12345",
+	"windows7.iso":                   "12345",
+	"windows2012.iso":                "12345"
+		},
+	"scriptmap":{
+		"mysql":     "mysql.sh",
+	"wordpress": "wordpress.sh"
+		},
+	"resultmap":{
+		"http":        "http://192.168.0.82:9090/",
+	"outputdir":   "static/result/test3/output/",
+	"outputimage": "centos66.qcow2",
+	"jsondir":     "static/result/test3/",
+	"scriptdir":   "static/result/test3/script/",
+	"cfgdir":      "static/result/test3/cfg/"
+		},
+	"logmap":{
+		"1": "7574"
+		}
+}
