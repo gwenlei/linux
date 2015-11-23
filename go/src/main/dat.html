@@ -1,0 +1,157 @@
+<html>
+<head>
+<link href="http://apps.bdimg.com/libs/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet">
+<script src="http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js"></script>
+<script src="http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/static/js/test2.js"></script>
+<script type="text/javascript">
+divnum=1;
+function adddiv(divp,id,field)
+{
+var partdiv=document.createElement("div");
+partdiv.id="partdiv"+divnum;
+partdiv.className="row";
+document.getElementById(divp).appendChild(partdiv);
+
+var parttext1div=document.createElement("div");
+parttext1div.id="parttext1div"+divnum;
+parttext1div.className="col-sm-5";
+var parttext1=document.createElement("input");
+parttext1.id=divp+"+"+"fieldid";
+parttext1.name=divp+"+"+"fieldid";
+parttext1.type="text";
+parttext1.value=id;
+parttext1.className="form-control";
+document.getElementById(partdiv.id).appendChild(parttext1div);
+document.getElementById(parttext1div.id).appendChild(parttext1);
+
+var parttext2div=document.createElement("div");
+parttext2div.id="parttext2div"+divnum;
+parttext2div.className="col-sm-5";
+var parttext2=document.createElement("input");
+parttext2.id=divp+"+"+"fieldvalue";
+parttext2.name=divp+"+"+"fieldvalue";
+parttext2.type="text";
+parttext2.value=field;
+parttext2.className="form-control";
+document.getElementById(partdiv.id).appendChild(parttext2div);
+document.getElementById(parttext2div.id).appendChild(parttext2);
+
+var partbuttondiv=document.createElement("div");
+partbuttondiv.id="partbuttondiv"+divnum;
+var partbutton=document.createElement("input");
+partbutton.id="delete"+divnum;
+partbutton.type="button";
+partbutton.value="delete";
+partbutton.className="btn btn-default";
+partbutton.onclick=function(){deletediv(this)};
+document.getElementById(partdiv.id).appendChild(partbuttondiv);
+document.getElementById(partbuttondiv.id).appendChild(partbutton);
+
+divnum=divnum+1;
+}
+function deletediv(obj){
+    var strid=obj.id;  
+    var o=document.getElementById(obj.id);  
+    var z=o.parentElement;  
+    var zz=document.getElementById(z.id).parentElement; 
+    var stridone=zz.id;  
+    var my = document.getElementById(stridone);  
+    if (my != null){  
+    my.parentNode.removeChild(my);}  
+}
+$(document).ready(function(){
+			$.getJSON("/static/test/data.json",function(result){
+                                $.each(result.dirmap, function(i, field){
+                                        adddiv("dirmap",i,field)
+					});
+                                $.each(result.jsonmap, function(i, field){
+                                        adddiv("jsonmap",i,field)
+					});
+                                $.each(result.cfgmap, function(i, field){
+                                        adddiv("cfgmap",i,field)
+					});
+                                $.each(result.isomap, function(i, field){
+                                        adddiv("isomap",i,field)
+					});
+                                $.each(result.md5map, function(i, field){
+                                        adddiv("md5map",i,field)
+					});
+                                $.each(result.scriptmap, function(i, field){
+                                        adddiv("scriptmap",i,field)
+					});
+                                $.each(result.resultmap, function(i, field){
+                                        adddiv("resultmap",i,field)
+					});
+                                $.each(result.logmap, function(i, field){
+                                        adddiv("logmap",i,field)
+					});
+				});
+		});
+</script>
+</head>
+
+<body  onLoad="javascript:document.form1.reset()">
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-4">
+                      <form class="form-horizontal"  id="form1" name="form1" action="/setdat" method="post">
+                      <div id="dirmap" class="form-group" >
+					<div class="col-sm-12">
+                                        <label for="dirmapb" class="control-label">dirmap</label>
+						<button type="button" class="btn btn-default" id="dirmapb" onclick="adddiv('dirmap','newid','newvalue')">add</button>
+					</div>
+		      </div>
+                      <div id="jsonmap" class="form-group" >
+					<div class="col-sm-12">
+                                                <label for="jsonmapb" class="control-label">jsonmap</label>
+						<button type="button" class="btn btn-default" id="jsonmapb" onclick="adddiv('jsonmap','newid','newvalue')">add</button>
+					</div>
+		      </div>
+                      <div id="cfgmap" class="form-group" >
+					<div class="col-sm-12">
+                                                <label for="cfgmapb" class="control-label">cfgmap</label>
+						<button type="button" class="btn btn-default" id="cfgmapb" onclick="adddiv('cfgmap','newid','newvalue')">add</button>
+					</div>
+		      </div>
+                      <div id="isomap" class="form-group" >
+					<div class="col-sm-12">
+                                                <label for="isomapb" class="control-label">isomap</label>
+						<button type="button" class="btn btn-default" id="isomapb" onclick="adddiv('isomap','newid','newvalue')">add</button>
+					</div>
+		      </div>
+                      <div id="md5map" class="form-group" >
+					<div class="col-sm-12">
+                                                <label for="md5mapb" class="control-label">md5map</label>
+						<button type="button" class="btn btn-default" id="md5mapb" onclick="adddiv('md5map','newid','newvalue')">add</button>
+					</div>
+		      </div>
+                      <div id="scriptmap" class="form-group" >
+					<div class="col-sm-12">
+                                                <label for="scriptmapb" class="control-label">scriptmap</label>
+						<button type="button" class="btn btn-default" id="scriptmapb" onclick="adddiv('scriptmap','newid','newvalue')">add</button>
+					</div>
+		      </div>
+                      <div id="resultmap" class="form-group" >
+					<div class="col-sm-12">
+                                                <label for="resultmapb" class="control-label">resultmap</label>
+						<button type="button" class="btn btn-default" id="resultmapb" onclick="adddiv('resultmap','newid','newvalue')">add</button>
+					</div>
+		      </div>
+                      <div id="logmap" class="form-group" >
+					<div class="col-sm-12">
+                                                <label for="logmapb" class="control-label">logmap</label>
+						<button type="button" class="btn btn-default" id="logmapb" onclick="adddiv('logmap','newid','newvalue')">add</button>
+					</div>
+		      </div>
+                      <div class="form-group">
+					<div class="col-sm-10">
+						<button type="submit" class="btn btn-default">Save</button>
+					</div>
+				</div>
+                      </form>
+                </div>
+        </div>
+</div>
+</body>
+</html>

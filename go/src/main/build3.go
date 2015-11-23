@@ -55,6 +55,38 @@ func setdat(w http.ResponseWriter, r *http.Request) {
 		for k, v := range r.Form {
 			fmt.Println(k, ":", strings.Join(v, " "))
 		}
+                for k, v := range r.Form["dirmap+fieldid"] {
+		   dat["dirmap"][v]= r.Form["dirmap+fieldvalue"][k]
+	        }
+                for k, v := range r.Form["jsonmap+fieldid"] {
+		   dat["jsonmap"][v]= r.Form["jsonmap+fieldvalue"][k]
+	        }
+                for k, v := range r.Form["cfgmap+fieldid"] {
+		   dat["cfgmap"][v]= r.Form["cfgmap+fieldvalue"][k]
+	        }
+                for k, v := range r.Form["isomap+fieldid"] {
+		   dat["isomap"][v]= r.Form["isomap+fieldvalue"][k]
+	        }
+                for k, v := range r.Form["md5map+fieldid"] {
+		   dat["md5map"][v]= r.Form["md5map+fieldvalue"][k]
+	        }
+                for k, v := range r.Form["scriptmap+fieldid"] {
+		   dat["scriptmap"][v]= r.Form["scriptmap+fieldvalue"][k]
+	        }
+                for k, v := range r.Form["resultmap+fieldid"] {
+		   dat["resultmap"][v]= r.Form["resultmap+fieldvalue"][k]
+	        }
+                for k, v := range r.Form["logmap+fieldid"] {
+		   dat["logmap"][v]= r.Form["logmap+fieldvalue"][k]
+	        }
+		newdataf, _ := os.Create("static/data/log/data.json"+time.Now().Format("20060102150405"))
+		dataf, _ := os.Open("static/data/data.json")
+		io.Copy(newdataf, dataf)
+		defer newdataf.Close()
+		defer dataf.Close()
+                line, _ := json.Marshal(dat)
+                ioutil.WriteFile("static/data/data.json", line, 0)
+                http.Redirect(w, r, "/setdat", 302)
 	}
 }
 
