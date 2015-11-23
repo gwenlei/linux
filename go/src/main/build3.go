@@ -55,30 +55,19 @@ func setdat(w http.ResponseWriter, r *http.Request) {
 		for k, v := range r.Form {
 			fmt.Println(k, ":", strings.Join(v, " "))
 		}
-                for k, v := range r.Form["dirmap+fieldid"] {
-		   dat["dirmap"][v]= r.Form["dirmap+fieldvalue"][k]
+                //clear dat map
+                for _, v := range dat {
+                   for j, _ := range v {
+		   delete(v,j)
+                   }
 	        }
-                for k, v := range r.Form["jsonmap+fieldid"] {
-		   dat["jsonmap"][v]= r.Form["jsonmap+fieldvalue"][k]
+                //reset dat map
+                tmp:=[...]string{"dirmap","jsonmap","cfgmap","isomap","md5map","scriptmap","resultmap","logmap"}
+                for _, vt := range tmp {
+                for k, v := range r.Form[vt+"+fieldid"] {
+		   dat[vt][v]= r.Form[vt+"+fieldvalue"][k]
 	        }
-                for k, v := range r.Form["cfgmap+fieldid"] {
-		   dat["cfgmap"][v]= r.Form["cfgmap+fieldvalue"][k]
-	        }
-                for k, v := range r.Form["isomap+fieldid"] {
-		   dat["isomap"][v]= r.Form["isomap+fieldvalue"][k]
-	        }
-                for k, v := range r.Form["md5map+fieldid"] {
-		   dat["md5map"][v]= r.Form["md5map+fieldvalue"][k]
-	        }
-                for k, v := range r.Form["scriptmap+fieldid"] {
-		   dat["scriptmap"][v]= r.Form["scriptmap+fieldvalue"][k]
-	        }
-                for k, v := range r.Form["resultmap+fieldid"] {
-		   dat["resultmap"][v]= r.Form["resultmap+fieldvalue"][k]
-	        }
-                for k, v := range r.Form["logmap+fieldid"] {
-		   dat["logmap"][v]= r.Form["logmap+fieldvalue"][k]
-	        }
+                }
 		newdataf, _ := os.Create("static/data/log/data.json"+time.Now().Format("20060102150405"))
 		dataf, _ := os.Open("static/data/data.json")
 		io.Copy(newdataf, dataf)
