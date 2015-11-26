@@ -2,11 +2,11 @@ var num=1;
 var place=1;
 function movea(id){
 if(place==1){var op=document.getElementById("build");}
-else if(place==2){var op=document.getElementById("setting");}
+else if(place==2){var op=document.getElementById("setdat");}
 else if(place==3){var op=document.getElementById("log");}
 op.className="";
 if(id=="build"){place=1;}
-else if(id=="setting"){place=2;}
+else if(id=="setdat"){place=2;}
 else if(id=="log"){place=3;}
 var np=document.getElementById(id);
 np.className="active";

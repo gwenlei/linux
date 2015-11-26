@@ -1,54 +1,124 @@
 <html>
 <head>
-<title></title>
-<script type="text/javascript" src="/static/js/test.js"></script>
+<meta   http-equiv="Expires"   CONTENT="0">
+<meta   http-equiv="Cache-Control"   CONTENT="no-cache">
+<meta   http-equiv="Pragma"   CONTENT="no-cache">
+<title>Packer build page</title>
+<link href="http://apps.bdimg.com/libs/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet">
+<script src="http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js"></script>
+<script src="http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/static/js/test2.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+			$.getJSON("/static/data/data.json",function(result){
+                                $.each(result.jsonmap, function(i, field){
+                                        $("#ostype").append("<option value='"+i+"'>"+i+"</option>");
+					});
+		});
+});
+</script>
 </head>
 <body>
-<form action="/build" method="post">
-ostype:
-<select name="ostype">
-<option value="CentOS6.6">CentOS6.6</option>
-<option value="CentOS6.7">CentOS6.7</option>
-<option value="CentOS7.1">CentOS7.1</option>
-<option value="Ubuntu12.04">Ubuntu12.04</option>
-<option value="Ubuntu14.04">Ubuntu14.04</option>
-<option value="OpenSuse13.2">OpenSuse13.2</option>
-<option value="Windows7">Windows7</option>
-<option value="Windows2012">Windows2012</option>
-</select>
-<br />
-disksize:<input type="text" name="disksize" size="6" value="6">G
-<br />
-partition:
-<input type=button value=add onclick="addtext('partdiv')">
-<div id="div1">
-<div id="partdiv">
-name:<input type="text" name="part" size="10" value="/">size:<input type="text" name="size" size="6" value="5">G
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-4">
+			<form class="form-horizontal"  action="/build" method="post">
+				<div class="form-group">
+					<label for="user" class="col-sm-2 control-label">vmname</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="vmname" name="vmname" value="vmname.qcow2">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="ostype" class="col-sm-2 control-label">ostype</label>
+					<div class="col-sm-10">
+						<select class="form-control"  id="ostype" name="ostype">
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="user" class="col-sm-2 control-label">User</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="user" name="user" value="root">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="password" class="col-sm-2 control-label">Password</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="password" name="password" value="engine">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="disksize" class="col-sm-2 control-label">Disksize</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="disksize" name="disksize" value="6">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="addpart" class="col-sm-2 control-label">Partitions</label>
+					<div class="col-sm-2">
+						<button type="button" class="btn btn-default" id="addpart" onclick="addtext('partition')">add</button>
+					</div>				
+				</div>
+				<div id="div1" class="form-group" >
+
+					<div id="partition" class="row">
+						<div class="col-sm-offset-2 col-sm-5">
+							<input type="text" class="form-control" id="part" name="part" value="/">
+						</div>
+						<div class="col-sm-3">
+							<input type="text" class="form-control" id="size" name="size" value="5">   
+						</div>
+
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="software" class="col-sm-2 control-label">software</label>
+					<div class="col-sm-offset-2 col-sm-10">
+
+						<div class="checkbox" id="software">
+							<label>
+								<input type="checkbox" value="mysql" name="software">
+								Mysql
+							</label>
+						</div>
+						<div class="checkbox">
+							<label>
+								<input type="checkbox" value="wordpress" name="software">
+								Wordpress
+							</label>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="headless" class="col-sm-2 control-label">headless</label>
+					<div class="col-sm-offset-2 col-sm-10">
+						<div class="checkbox">
+							<label>
+								<input type="checkbox" name="headless" value="false" checked> false
+							</label>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="headless" class="col-sm-2 control-label">compat</label>
+					<div class="col-sm-offset-2 col-sm-10">
+						<div class="checkbox">
+							<label>
+								<input type="checkbox" name="compat" value="0.1" > 0.1
+							</label>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-2 col-sm-10">
+						<button type="submit" class="btn btn-default">Submit</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
 </div>
-</div>
-<br />
-user:<input type="text" name="user" value="root">
-<br />
-password:<input type="text" name="password" value="engine">
-<br />
-software:
-<br />
-<input type="checkbox" name="software" value="mysql" /> mysql
-<br />
-<input type="checkbox" name="software" value="wordpress" /> wordpress
-<br />
-service:
-<br />
-<input type="checkbox" name="service" value="iptables" /> iptables
-<br />
-<input type="checkbox" name="service" value="network" /> network
-<br />
-headless:<input type="radio" name="headless" value="true"/> true
-<input type="radio" name="headless" value="false" checked/> false
-<br />
-cloudstack ip:<input type="text" name="cloudstackip">
-<br />
-<input type="submit" value="Submit" />
-</form>
 </body>
 </html>

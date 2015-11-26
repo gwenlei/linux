@@ -64,10 +64,7 @@ function deletediv(obj){
     my.parentNode.removeChild(my);}  
 }
 $(document).ready(function(){
-			$.getJSON("/static/data/data.json?t="+new Date(),function(result){
-                                $.each(result.dirmap, function(i, field){
-                                        adddiv("dirmap",i,field)
-					});
+			$.getJSON("/static/data/data.json",function(result){
                                 $.each(result.jsonmap, function(i, field){
                                         adddiv("jsonmap",i,field)
 					});
@@ -86,8 +83,8 @@ $(document).ready(function(){
                                 $.each(result.resultmap, function(i, field){
                                         adddiv("resultmap",i,field)
 					});
-                                $.each(result.logmap, function(i, field){
-                                        adddiv("logmap",i,field)
+                                $.each(result.servermap, function(i, field){
+                                        adddiv("servermap",i,field)
 					});
 				});
 
@@ -100,12 +97,6 @@ $(document).ready(function(){
 	<div class="row">
 		<div class="col-md-4">
                       <form class="form-horizontal"  id="form1" name="form1" action="/setdat" method="post">
-                      <div id="dirmap" class="form-group" >
-					<div class="col-sm-12">
-                                        <label for="dirmapb" class="control-label">dirmap</label>
-						<button type="button" class="btn btn-default" id="dirmapb" onclick="adddiv('dirmap','newid','newvalue')">add</button>
-					</div>
-		      </div>
                       <div id="jsonmap" class="form-group" >
 					<div class="col-sm-12">
                                                 <label for="jsonmapb" class="control-label">jsonmap</label>
@@ -142,10 +133,10 @@ $(document).ready(function(){
 						<button type="button" class="btn btn-default" id="resultmapb" onclick="adddiv('resultmap','newid','newvalue')">add</button>
 					</div>
 		      </div>
-                      <div id="logmap" class="form-group" >
+                      <div id="servermap" class="form-group" >
 					<div class="col-sm-12">
-                                                <label for="logmapb" class="control-label">logmap</label>
-						<button type="button" class="btn btn-default" id="logmapb" onclick="adddiv('logmap','newid','newvalue')">add</button>
+                                                <label for="servermapb" class="control-label">servermap</label>
+						<button type="button" class="btn btn-default" id="servermapb" onclick="adddiv('servermap','newid','newvalue')">add</button>
 					</div>
 		      </div>
                       <div class="form-group">
