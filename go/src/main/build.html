@@ -14,8 +14,60 @@ $(document).ready(function(){
                                 $.each(result.jsonmap, function(i, field){
                                         $("#ostype").append("<option value='"+i+"'>"+i+"</option>");
 					});
+                                document.getElementById("ostype").options[0].selected=true;
+                                $.each(result.scriptmap, function(i, field){
+                                        if(i==document.getElementById("ostype").value){
+                                          adddiv(field);
+                                        }
+			        });
 		});
 });
+function changeset(x)
+{
+document.getElementById("vmname").value=(document.getElementById(x).value).replace(/\./g, "-")+".qcow2";
+if((document.getElementById(x).value).indexOf("CentOS")>=0 || (document.getElementById(x).value).indexOf("OpenSuse")>=0){
+  document.getElementById("user").value="root";
+}
+if((document.getElementById(x).value).indexOf("Ubuntu")>=0){
+  document.getElementById("user").value="clouder";
+}
+if((document.getElementById(x).value).indexOf("Windows")>=0){
+  document.getElementById("user").value="Administrator";
+}
+
+    while (document.getElementById("checkboxdiv").hasChildNodes())
+    {
+      document.getElementById("checkboxdiv").removeChild(document.getElementById("checkboxdiv").firstChild);
+    }
+			$.getJSON("/static/data/data.json",function(result){
+                                $.each(result.scriptmap, function(i, field){
+                                        if(i==document.getElementById("ostype").value){
+                                          adddiv(field);
+                                        }
+			        });
+		});
+
+
+}
+divnum=1;
+function adddiv(field)
+{
+var parttext1div=document.createElement("div");
+parttext1div.id="software"+divnum;
+parttext1div.className="checkbox";
+var label1=document.createElement("label");
+label1.id="label"+divnum;
+var parttext1=document.createElement("input");
+parttext1.id="softwares"+divnum;
+parttext1.name="software";
+parttext1.type="checkbox";
+parttext1.value=field;
+document.getElementById("checkboxdiv").appendChild(parttext1div);
+document.getElementById(parttext1div.id).appendChild(label1);
+document.getElementById(label1.id).appendChild(parttext1);
+label1.innerHTML=label1.innerHTML+field;
+divnum=divnum+1;
+}
 </script>
 </head>
 <body>
@@ -25,15 +77,15 @@ $(document).ready(function(){
 		<div class="col-md-4">
 			<form class="form-horizontal"  action="/build" method="post">
 				<div class="form-group">
-					<label for="user" class="col-sm-2 control-label">vmname</label>
+					<label for="user" class="col-sm-2 control-label">Vmname</label>
 					<div class="col-sm-10">
-						<input type="text" class="form-control" id="vmname" name="vmname" value="vmname.qcow2">
+						<input type="text" class="form-control" id="vmname" name="vmname" value="CentOS6-6.qcow2">
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="ostype" class="col-sm-2 control-label">ostype</label>
+					<label for="ostype" class="col-sm-2 control-label">Ostype</label>
 					<div class="col-sm-10">
-						<select class="form-control"  id="ostype" name="ostype">
+						<select class="form-control"  id="ostype" name="ostype" onchange="changeset(this.id)">
 						</select>
 					</div>
 				</div>
@@ -75,25 +127,12 @@ $(document).ready(function(){
 				</div>
 
 				<div class="form-group">
-					<label for="software" class="col-sm-2 control-label">software</label>
-					<div class="col-sm-offset-2 col-sm-10">
-
-						<div class="checkbox" id="software">
-							<label>
-								<input type="checkbox" value="mysql" name="software">
-								Mysql
-							</label>
-						</div>
-						<div class="checkbox">
-							<label>
-								<input type="checkbox" value="wordpress" name="software">
-								Wordpress
-							</label>
-						</div>
+					<label for="software" class="col-sm-2 control-label">Software</label>
+					<div class="col-sm-offset-2 col-sm-10" id="checkboxdiv">
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="headless" class="col-sm-2 control-label">headless</label>
+					<label for="headless" class="col-sm-2 control-label">Headless</label>
 					<div class="col-sm-offset-2 col-sm-10">
 						<div class="checkbox">
 							<label>
@@ -103,7 +142,7 @@ $(document).ready(function(){
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="headless" class="col-sm-2 control-label">compat</label>
+					<label for="headless" class="col-sm-2 control-label">Compat</label>
 					<div class="col-sm-offset-2 col-sm-10">
 						<div class="checkbox">
 							<label>

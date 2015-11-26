@@ -158,13 +158,12 @@ func buildjson(r *http.Request) (result string) {
 		defer newbasescriptf.Close()
 		for k, v := range script {
 			fmt.Println(k, v)
-			script[k] = dat["scriptmap"][v]
-			newscript[k] = resultdir+"script/" + dat["scriptmap"][v][strings.LastIndex(dat["scriptmap"][v], "/")+1:]
+			newscript[k] = resultdir+"script/" + v[strings.LastIndex(v, "/")+1:]
 			scriptfiles = scriptfiles + "\"" + newscript[k] + "\""
 			n = n - 1
 			// copy script
 			newscriptf, _ := os.Create(newscript[k])
-			scriptf, _ := os.Open(script[k])
+			scriptf, _ := os.Open(v)
 			io.Copy(newscriptf, scriptf)
 			defer scriptf.Close()
 			defer newscriptf.Close()
@@ -185,11 +184,31 @@ func buildjson(r *http.Request) (result string) {
 
 	// new cfg file part
 	var partitions string
-	for k, v := range r.Form["part"] {
+        if index:=strings.LastIndex(r.Form.Get("ostype"),"CentOS");index>=0 {
+	   for k, v := range r.Form["part"] {
 		sizen, _ := strconv.Atoi(r.Form["size"][k])
 		sizens := strconv.Itoa(sizen * 1024)
-		partitions = partitions + "part " + v + " --fstype=ext4 --size=" + sizens + "\n"
-	}
+                if v=="swap"{
+                  partitions = partitions + "part swap --size=" + sizens + "\n"
+                }else{
+		  partitions = partitions + "part " + v + " --fstype=ext4 --size=" + sizens + "\n"
+                }
+	   }
+        }
+        if index:=strings.LastIndex(r.Form.Get("ostype"),"Ubuntu");index>=0 {
+	   for k, v := range r.Form["part"] {
+		sizen, _ := strconv.Atoi(r.Form["size"][k])
+		sizens := strconv.Itoa(sizen * 1024)
+                if k==0 {
+                partitions = partitions + "d-i partman-auto/method string regular\n"
+                }
+                if v=="swap"{
+                partitions = partitions + "d-i partman-auto/expert_recipe string boot-root :: 64 "+sizens+" 300% linux-swap method{ swap } format{ } . "
+                }else{
+		partitions = partitions + sizens+" 40 -1 ext4 method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ "+v+" } . "
+                }
+	   }
+        }
 	os.Create(newcfg)
 	buf, _ = ioutil.ReadFile(cfg)
 	line = string(buf)
