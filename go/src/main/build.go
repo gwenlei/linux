@@ -149,13 +149,7 @@ func buildjson(r *http.Request) (result string) {
 	copy(newscript, script)
 	fmt.Println("n=", n)
 	if n > 0 {
-		var scriptfiles = "\"" + resultdir+"script/" + "base.sh" + "\",\n"
-		// copy script
-		newbasescriptf, _ := os.Create(resultdir+"script/" + "base.sh")
-		basescriptf, _ := os.Open("template/script/base.sh")
-		io.Copy(newbasescriptf, basescriptf)
-		defer basescriptf.Close()
-		defer newbasescriptf.Close()
+		var scriptfiles string
 		for k, v := range script {
 			fmt.Println(k, v)
 			newscript[k] = resultdir+"script/" + v[strings.LastIndex(v, "/")+1:]

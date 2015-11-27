@@ -16,7 +16,7 @@ $(document).ready(function(){
 					});
                                 document.getElementById("ostype").options[0].selected=true;
                                 $.each(result.scriptmap, function(i, field){
-                                        if(i==document.getElementById("ostype").value){
+                                        if((document.getElementById("ostype").value).indexOf(i.substring(0,i.indexOf("-")))>=0) {
                                           adddiv(field);
                                         }
 			        });
@@ -41,7 +41,7 @@ if((document.getElementById(x).value).indexOf("Windows")>=0){
     }
 			$.getJSON("/static/data/data.json",function(result){
                                 $.each(result.scriptmap, function(i, field){
-                                        if(i==document.getElementById("ostype").value){
+                                        if((document.getElementById("ostype").value).indexOf(i.substring(0,i.indexOf("-")))>=0) {
                                           adddiv(field);
                                         }
 			        });
