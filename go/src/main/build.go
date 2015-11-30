@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+        "path/filepath"
 )
 
 var dat map[string](map[string]string)
@@ -142,6 +143,8 @@ func buildjson(r *http.Request) (result string) {
 	line = strings.Replace(line, "ISO_CHECKSUM", dat["md5map"][dat["isomap"][r.Form.Get("ostype")]], -1)
 	line = strings.Replace(line, "ISO_URL", iso, -1)
 	line = strings.Replace(line, "KS_CFG", newcfgs, -1)
+        line = strings.Replace(line, "WIN_CFG", newcfg, -1)
+        line = strings.Replace(line, "RESULTDIR", resultdir, -1)
 	line = strings.Replace(line, "HEADLESS", r.Form.Get("headless"), -1)
 	var script = make([]string, 10)
 	var newscript = make([]string, 10)
@@ -182,7 +185,7 @@ func buildjson(r *http.Request) (result string) {
 	   for k, v := range r.Form["part"] {
 		sizen, _ := strconv.Atoi(r.Form["size"][k])
 		sizens := strconv.Itoa(sizen * 1024)
-                if v=="swap"{
+                if v=="swap" {
                   partitions = partitions + "part swap --size=" + sizens + "\n"
                 }else{
 		  partitions = partitions + "part " + v + " --fstype=ext4 --size=" + sizens + "\n"
@@ -194,12 +197,22 @@ func buildjson(r *http.Request) (result string) {
 		sizen, _ := strconv.Atoi(r.Form["size"][k])
 		sizens := strconv.Itoa(sizen * 1024)
                 if k==0 {
-                partitions = partitions + "d-i partman-auto/method string regular\n"
-                }
-                if v=="swap"{
-                partitions = partitions + "d-i partman-auto/expert_recipe string boot-root :: 64 "+sizens+" 300% linux-swap method{ swap } format{ } . "
+                partitions = partitions + "d-i partman-auto/method string regular\nd-i partman-auto/expert_recipe string boot-root :: "
+                if v=="swap" {
+                partitions = partitions + "64 "+sizens+" 300% $primary{ } linux-swap method{ swap } format{ } . "
+                }else if v=="/boot" {
+                partitions = partitions + "64 "+sizens+" 200 ext4 $primary{ } $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ /boot } "
                 }else{
-		partitions = partitions + sizens+" 40 -1 ext4 method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ "+v+" } . "
+		partitions = partitions + sizens+" 4000 -1 ext4 $primary{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ "+v+" } . "
+                }
+                }else {
+                if v=="swap" {
+                partitions = partitions + "64 "+sizens+" 300% linux-swap method{ swap } format{ } . "
+                }else if v=="/boot" {
+                partitions = partitions + "64 "+sizens+" 200 ext4 $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ /boot } "
+                }else{
+		partitions = partitions + sizens+" 4000 -1 ext4 method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ "+v+" } . "
+                }
                 }
 	   }
         }
@@ -210,6 +223,9 @@ func buildjson(r *http.Request) (result string) {
 	line = strings.Replace(line, "SSH_PASSWORD", r.Form.Get("password"), -1)
 	line = strings.Replace(line, "PARTITIONS", partitions, -1)
 	ioutil.WriteFile(newcfg, []byte(line), 0)
+        if index:=strings.LastIndex(r.Form.Get("ostype"),"Windows");index>=0 {
+          copydir("template/floppy")
+        }
 
 	fmt.Println(json)
 	fmt.Println(cfg)
@@ -250,4 +266,24 @@ func calltransform(p *os.Process, output string, newoutput string) *os.Process {
 	}
 	fmt.Println("p2=[", p2, "]")
 	return p2
+}
+
+func copydir(path string) {
+        err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
+                if ( f == nil ) {return err}
+                if f.IsDir() {
+                  os.MkdirAll(strings.Replace(path, "template/", resultdir, -1), 0777)
+                  return nil
+                }
+		newfil, _ := os.Create(strings.Replace(path, "template/", resultdir, -1))
+		oldfil, _ := os.Open(path)
+		io.Copy(newfil, oldfil)
+                oldfil.Close()
+                println(path)
+                println(strings.Replace(path, "template/", resultdir, -1))
+                return nil
+        })
+        if err != nil {
+                fmt.Printf("filepath.Walk() returned %v\n", err)
+        }
 }

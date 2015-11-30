@@ -32,7 +32,10 @@ if((document.getElementById(x).value).indexOf("Ubuntu")>=0){
   document.getElementById("user").value="clouder";
 }
 if((document.getElementById(x).value).indexOf("Windows")>=0){
-  document.getElementById("user").value="Administrator";
+  document.getElementById("user").value="clouder";
+  document.getElementById("disksize").value="20";
+  document.getElementById("part").value="C";
+  document.getElementById("size").value="18";
 }
 
     while (document.getElementById("checkboxdiv").hasChildNodes())
@@ -77,16 +80,16 @@ divnum=divnum+1;
 		<div class="col-md-4">
 			<form class="form-horizontal"  action="/build" method="post">
 				<div class="form-group">
-					<label for="user" class="col-sm-2 control-label">Vmname</label>
-					<div class="col-sm-10">
-						<input type="text" class="form-control" id="vmname" name="vmname" value="CentOS6-6.qcow2">
-					</div>
-				</div>
-				<div class="form-group">
 					<label for="ostype" class="col-sm-2 control-label">Ostype</label>
 					<div class="col-sm-10">
 						<select class="form-control"  id="ostype" name="ostype" onchange="changeset(this.id)">
 						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="user" class="col-sm-2 control-label">Vmname</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="vmname" name="vmname" value="CentOS6-6.qcow2">
 					</div>
 				</div>
 				<div class="form-group">
