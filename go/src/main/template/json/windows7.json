@@ -1,30 +1,32 @@
 {
     "variables": {
-        "password": "Administr@tor",
-        "disk_size": "61440"
+        "password": "SSH_PASSWORD",
+        "disk_size": "DISK_SIZE"
     },
     "builders": [
         {
             "name": "win7",
+	    "vm_name": "VM_NAME",
             "type": "qemu",
             "format":"qcow2",
             "accelerator": "kvm",
+	    "headless": HEADLESS,
+	    "output_directory": "OUTPUT_DIRECTORY",
             "disk_size": "{{ user `disk_size`}}",
-            "iso_url": "/home/html/iso/cn_windows_7_ultimate_with_sp1_x64_dvd_618537.iso",
+            "iso_url": "ISO_URL",
             "iso_checksum_type": "md5",
-            "iso_checksum": "6625b122837b7f6f38997e23b3eb30cc",
-            "ssh_username": "Administrator",
-            "ssh_password": "Administrator",
-            "ssh_wait_timeout": "30m",
+            "iso_checksum": "ISO_CHECKSUM",
+            "ssh_username": "SSH_USERNAME",
+            "ssh_password": "SSH_PASSWORD",
+            "ssh_wait_timeout": "60m",
             "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
-            "boot_wait": "2s",
+            "boot_wait": "5s",
             "floppy_files": [
-                "/home/html/win7/Autounattend.xml",
-                "/home/jsondir/floppy/drivers/virtio-win-0.1-81/WIN7/AMD64/*",
-                "/home/jsondir/floppy/common/*",
-                "/home/jsondir/floppy/windows-2012-standard-amd64/*"
+                "WIN_CFG",
+                "RESULTDIRfloppy/drivers/virtio-win-0.1-81/WIN7/AMD64/*",
+                "RESULTDIRfloppy/common/*",
+                "RESULTDIRfloppy/windows-2012-standard-amd64/*"
             ]
 
         }
     ]
-}
