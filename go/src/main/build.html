@@ -30,6 +30,10 @@ if((document.getElementById(x).value).indexOf("CentOS")>=0 || (document.getEleme
 }
 if((document.getElementById(x).value).indexOf("Ubuntu")>=0){
   document.getElementById("user").value="clouder";
+  document.getElementById("disksize").value="7";
+  document.getElementById("part").value="swap";
+  document.getElementById("size").value="1";
+  addtext('partition')
 }
 if((document.getElementById(x).value).indexOf("Windows")>=0){
   document.getElementById("user").value="clouder";

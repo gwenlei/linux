@@ -20,7 +20,7 @@ cd /D %SystemDrive%\windows\temp
 :: packages -- comma separated
 set PACKAGES=cygrunsrv,makepasswd,nano,openssh,rsync
 
-%SystemDrive%\cygwin\cygwin-setup-x86_64.exe -a x86_64 -X -d -q -R %SystemDrive%\cygwin -P %PACKAGES% -L %SystemDrive%\windows\temp
+%SystemDrive%\cygwin\cygwin-setup-x86_64.exe -a x86_64 -X -d -q -R %SystemDrive%\cygwin -P %PACKAGES% -L
 
 :: Resolve the path with %~dp0 - for easy execution in both test and prod.
 set _PATH=%~dp0install-cygwin-sshd.sh
