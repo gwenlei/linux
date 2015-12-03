@@ -10,12 +10,15 @@ $(document).ready(function(){
 			$.getJSON("/static/data/reportlog.json",function(result){
                                 $.each(result, function(i, field){
                                         $("#reportb").append("<tr>");
-var parttext1=document.createElement("input");
-parttext1.id="clickt";
-parttext1.name="clickt";
-parttext1.type="checkbox";
-parttext1.value=field.timestamp;
-document.getElementById("reportb").appendChild(parttext1);
+                                        var parttext1=document.createElement("input");
+                                        parttext1.id="clickt";
+                                        parttext1.name="clickt";
+                                        parttext1.type="checkbox";
+                                        parttext1.value=field.timestamp;
+                                        document.getElementById("reportb").appendChild(parttext1);
+                                        $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+"\">"+field.outputdir+field.vmname+"</a></td>");
+                                        $("#reportb").append("<td><a href=\""+field.resultdir+"packer.log\">log</a></td>");
+                                        $("#reportb").append("<td>"+field.status+"</td>");
                                         $("#reportb").append("<td>"+field.timestamp+"</td>");
                                         $("#reportb").append("<td>"+field.ostype+"</td>");
                                         $("#reportb").append("<td>"+field.vmname+"</td>");
@@ -25,8 +28,6 @@ document.getElementById("reportb").appendChild(parttext1);
                                         $("#reportb").append("<td>"+field.part+"</td>");
                                         $("#reportb").append("<td>"+field.software+"</td>");
                                         $("#reportb").append("<td>"+field.compat+"</td>");
-                                        $("#reportb").append("<td>"+field.status+"</td>");
-                                        $("#reportb").append("<td>"+field.outputdir+"</td>");
                                         $("#reportb").append("</tr>");
 				});
 		});
@@ -36,12 +37,14 @@ document.getElementById("reportb").appendChild(parttext1);
 <body>
 </br>
 <form class="form-horizontal"  action="/report" method="post">
-<button type="submit" class="btn btn-default">delete</button>
 <table class="table">
 	<caption>vmreport</caption>
 	<thead>
 		<tr>
 			<th>selected</th>
+                        <th>outputdir</th>
+                        <th>log</th>
+			<th>status</th>
 			<th>timestamp</th>
 			<th>ostype</th>
 			<th>vmname</th>
@@ -51,13 +54,12 @@ document.getElementById("reportb").appendChild(parttext1);
 			<th>partition</th>
                         <th>software</th>
                         <th>compat</th>
-			<th>status</th>
-                        <th>outputdir</th>
 		</tr>
 	</thead>
 	<tbody id="reportb">
 	</tbody>
 </table>
+<button type="submit" class="btn btn-default">delete</button>
 </form>
 </body>
 </html>			

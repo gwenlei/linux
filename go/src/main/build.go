@@ -130,6 +130,7 @@ func report(w http.ResponseWriter, r *http.Request) {
                         if err := exec.Command("rm", "-rf",dat["resultmap"]["resultdir"] +v).Run(); err != nil {
                            fmt.Printf("Error removing build directory: %s %s\n", dat["resultmap"]["resultdir"] +v,err)
                         }
+                        
 		}
                 liner, _ := json.Marshal(reportlog)
 	        ioutil.WriteFile("static/data/reportlog.json", liner, 0)
@@ -301,9 +302,8 @@ func callpacker(timest string) *os.Process {
         reportlog[timest]["packerpid"]=strconv.Itoa(p.Pid)
 	return p
 }
-func calltransform(p *os.Process, timest string){
-        checkstatus(p,"packer",timest)
-	if reportlog[timest]["compat"] == "0.1" {
+func calltransform(p *os.Process, timest string){        
+	if checkstatus(p,"packer",timest)==true && reportlog[timest]["compat"] == "0.1" {
 		fmt.Println("calltransform")
 		inf, _ := os.Create(reportlog[timest]["resultdir"] + "inf2.log")
 		outf, _ := os.Create(reportlog[timest]["resultdir"] + "convert.log")
@@ -325,7 +325,7 @@ func calltransform(p *os.Process, timest string){
 		go checkstatus(p2,"transform",timest)		
 	}
 }
-func checkstatus(p *os.Process,pname string,timest string){
+func checkstatus(p *os.Process,pname string,timest string)bool{
         fmt.Println("checkstatus", pname,p)
         reportlog[timest]["status"]=pname+" running"
         liner, _ := json.Marshal(reportlog)
@@ -333,18 +333,17 @@ func checkstatus(p *os.Process,pname string,timest string){
 	pw, _ := p.Wait()
         fmt.Println("checkstatus over", p)
         fmt.Println("timest=", timest)
-        if status:=pw.Success();status==true {
+        status:=pw.Success();
+        if status==true {
             reportlog[timest]["status"]=pname+" success"
             fmt.Println("checkstatus over success ",pname, p)
         }else{
-	    reportlog[timest]["status"]=pname+" exit"
-            fmt.Println("checkstatus over exit ",pname, p)
+	    reportlog[timest]["status"]=pname+" failed"
+            fmt.Println("checkstatus over failed ",pname, p)
         }
-        fmt.Println("checkstatus over SystemTime ",pname, p,pw.SystemTime())
-        fmt.Println("checkstatus over UserTime ",pname, p,pw.UserTime())
-        reportlog[timest][pname]=string(pw.SystemTime())
         liner, _ = json.Marshal(reportlog)
 	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
+        return status
 
 }
 

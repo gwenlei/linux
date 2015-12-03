@@ -27,13 +27,13 @@ function changeset(x)
 document.getElementById("vmname").value=(document.getElementById(x).value).replace(/\./g, "-")+".qcow2";
 if((document.getElementById(x).value).indexOf("CentOS")>=0 || (document.getElementById(x).value).indexOf("OpenSuse")>=0){
   document.getElementById("user").value="root";
+  document.getElementById("part").value="/";
+  document.getElementById("size").value="5";
 }
 if((document.getElementById(x).value).indexOf("Ubuntu")>=0){
   document.getElementById("user").value="clouder";
-  document.getElementById("disksize").value="7";
-  document.getElementById("part").value="swap";
-  document.getElementById("size").value="1";
-  addtext('partition')
+  document.getElementById("part").value="/";
+  document.getElementById("size").value="5";
 }
 if((document.getElementById(x).value).indexOf("Windows")>=0){
   document.getElementById("user").value="clouder";
