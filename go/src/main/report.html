@@ -16,9 +16,10 @@ $(document).ready(function(){
                                         parttext1.type="checkbox";
                                         parttext1.value=field.timestamp;
                                         document.getElementById("reportb").appendChild(parttext1);
-                                        $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+"\">"+field.outputdir+field.vmname+"</a></td>");
-                                        $("#reportb").append("<td><a href=\""+field.resultdir+"packer.log\">log</a></td>");
                                         $("#reportb").append("<td>"+field.status+"</td>");
+                                        $("#reportb").append("<td><a href=\""+field.resultdir+"packer.log\">log</a></td>");
+                                        $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+"\">"+field.outputdir+field.vmname+"</a></td>");
+                                        $("#reportb").append("<td>"+parseInt(field.packertime/60)+"m"+field.packertime%60+"s</td>");
                                         $("#reportb").append("<td>"+field.timestamp+"</td>");
                                         $("#reportb").append("<td>"+field.ostype+"</td>");
                                         $("#reportb").append("<td>"+field.vmname+"</td>");
@@ -42,9 +43,10 @@ $(document).ready(function(){
 	<thead>
 		<tr>
 			<th>selected</th>
-                        <th>outputdir</th>
-                        <th>log</th>
 			<th>status</th>
+                        <th>log</th>
+                        <th>outputdir</th>
+			<th>packertime</th>
 			<th>timestamp</th>
 			<th>ostype</th>
 			<th>vmname</th>

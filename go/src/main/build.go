@@ -140,7 +140,7 @@ func report(w http.ResponseWriter, r *http.Request) {
 }
 
 func buildjson(r *http.Request) (timest string) {
-        timest=string(time.Now().Format("20060102150405"))
+        timest=time.Now().Format("20060102150405")
         
         //report
         reportlog[timest]=make(map[string]string)
@@ -246,8 +246,7 @@ func buildjson(r *http.Request) (timest string) {
 		  partitions = partitions + "part " + v + " --fstype=ext4 --size=" + sizens + "\n"
                 }
 	   }
-        }
-        if index:=strings.LastIndex(r.Form.Get("ostype"),"Ubuntu");index>=0 {
+        }else if index:=strings.LastIndex(r.Form.Get("ostype"),"Ubuntu");index>=0 {
 	   for k, v := range r.Form["part"] {
 		sizen, _ := strconv.Atoi(r.Form["size"][k])
 		sizens := strconv.Itoa(sizen * 1024)
@@ -270,6 +269,20 @@ func buildjson(r *http.Request) (timest string) {
                 }
                 }
 	   }
+        }else if index:=strings.LastIndex(r.Form.Get("ostype"),"OpenSuse");index>=0 {
+	   for k, v := range r.Form["part"] {
+                partitions = partitions+"<partition><create config:type=\"boolean\">true</create><crypt_fs config:type=\"boolean\">false</crypt_fs><filesystem config:type=\"symbol\">btrfs</filesystem><format config:type=\"boolean\">true</format><loop_fs config:type=\"boolean\">false</loop_fs><mount>"+v+"</mount><mountby config:type=\"symbol\">device</mountby><partition_id config:type=\"integer\">"+strconv.Itoa(130+k+1)+"</partition_id><partition_nr config:type=\"integer\">"+strconv.Itoa(1+k)+"</partition_nr><raid_options/><resize config:type=\"boolean\">false</resize><size>"+r.Form["size"][k]+"G</size></partition>\n"
+           }
+        }
+        var partitionadd string
+        var partitionmodify string
+        if index:=strings.LastIndex(r.Form.Get("ostype"),"Windows");index>=0 {
+	   for k, v := range r.Form["part"] {
+		sizen, _ := strconv.Atoi(r.Form["size"][k])
+		sizens := strconv.Itoa(sizen * 1024)
+                partitionadd = partitionadd + "<CreatePartition wcm:action=\"add\"><Order>"+strconv.Itoa(k+1)+"</Order><Type>Primary</Type><Extend>false</Extend><Size>"+sizens+"</Size></CreatePartition>\n"
+                partitionmodify = partitionmodify + "<ModifyPartition wcm:action=\"add\"><Format>NTFS</Format><Label>"+r.Form.Get("ostype")+"</Label><Letter>"+v+"</Letter><Order>"+strconv.Itoa(k+1)+"</Order><PartitionID>"+strconv.Itoa(k+1)+"</PartitionID></ModifyPartition>\n"
+	   }
         }
 	os.Create(reportlog[timest]["newcfg"])
 	buf, _ = ioutil.ReadFile(cfg)
@@ -277,6 +290,8 @@ func buildjson(r *http.Request) (timest string) {
 	line = strings.Replace(line, "SSH_USERNAME", r.Form.Get("user"), -1)
 	line = strings.Replace(line, "SSH_PASSWORD", r.Form.Get("password"), -1)
 	line = strings.Replace(line, "PARTITIONS", partitions, -1)
+        line = strings.Replace(line, "PARTITONADD", partitionadd, -1)
+        line = strings.Replace(line, "PARTITONMODIFY", partitionmodify, -1)
 	ioutil.WriteFile(reportlog[timest]["newcfg"], []byte(line), 0)
         if index:=strings.LastIndex(r.Form.Get("ostype"),"Windows");index>=0 {
           copydir("template/floppy",timest)
@@ -328,11 +343,19 @@ func calltransform(p *os.Process, timest string){
 func checkstatus(p *os.Process,pname string,timest string)bool{
         fmt.Println("checkstatus", pname,p)
         reportlog[timest]["status"]=pname+" running"
+        reportlog[timest][pname+"start"]=time.Now().Format("20060102150405")
         liner, _ := json.Marshal(reportlog)
 	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
 	pw, _ := p.Wait()
         fmt.Println("checkstatus over", p)
         fmt.Println("timest=", timest)
+        reportlog[timest][pname+"stop"]=time.Now().Format("20060102150405")
+        t1,_:=time.Parse("20060102150405",reportlog[timest][pname+"stop"])
+        t2,_:=time.Parse("20060102150405",reportlog[timest][pname+"start"])
+        reportlog[timest][pname+"time"]=strconv.Itoa(int(t1.Sub(t2))/1e9)
+        fmt.Println("t1=", t1)
+        fmt.Println("t2=", t2)
+        fmt.Println("cost=",t1.Sub(t2))
         status:=pw.Success();
         if status==true {
             reportlog[timest]["status"]=pname+" success"

@@ -22,32 +22,10 @@
       <DiskConfiguration>
         <Disk wcm:action="add">
           <CreatePartitions>
-            <CreatePartition wcm:action="add">
-              <Type>Primary</Type>
-              <Order>1</Order>
-              <Size>350</Size>
-            </CreatePartition>
-            <CreatePartition wcm:action="add">
-              <Order>2</Order>
-              <Type>Primary</Type>
-              <Extend>true</Extend>
-            </CreatePartition>
+PARTITONADD
           </CreatePartitions>
           <ModifyPartitions>
-            <ModifyPartition wcm:action="add">
-              <Active>true</Active>
-              <Format>NTFS</Format>
-              <Label>boot</Label>
-              <Order>1</Order>
-              <PartitionID>1</PartitionID>
-            </ModifyPartition>
-            <ModifyPartition wcm:action="add">
-              <Format>NTFS</Format>
-              <Label>Win7</Label>
-              <Letter>C</Letter>
-              <Order>2</Order>
-              <PartitionID>2</PartitionID>
-            </ModifyPartition>
+PARTITONMODIFY
           </ModifyPartitions>
           <DiskID>0</DiskID>
           <WillWipeDisk>true</WillWipeDisk>
@@ -63,7 +41,7 @@
           </InstallFrom>
           <InstallTo>
             <DiskID>0</DiskID>
-            <PartitionID>2</PartitionID>
+            <PartitionID>1</PartitionID>
           </InstallTo>
         </OSImage>
       </ImageInstall>

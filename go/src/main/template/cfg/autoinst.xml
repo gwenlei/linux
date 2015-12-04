@@ -45,52 +45,7 @@
       <device>/dev/sda</device>
       <initialize config:type="boolean">true</initialize>
       <partitions config:type="list">
-        <partition>
-          <create config:type="boolean">true</create>
-          <crypt_fs config:type="boolean">false</crypt_fs>
-          <filesystem config:type="symbol">swap</filesystem>
-          <format config:type="boolean">true</format>
-          <fstopt>defaults</fstopt>
-          <loop_fs config:type="boolean">false</loop_fs>
-          <mount>swap</mount>
-          <mountby config:type="symbol">device</mountby>
-          <partition_id config:type="integer">130</partition_id>
-          <partition_nr config:type="integer">1</partition_nr>
-          <raid_options/>
-          <resize config:type="boolean">false</resize>
-          <size>512M</size>
-        </partition>
-        <partition>
-          <create config:type="boolean">true</create>
-          <crypt_fs config:type="boolean">false</crypt_fs>
-          <filesystem config:type="symbol">btrfs</filesystem>
-          <format config:type="boolean">true</format>
-          <loop_fs config:type="boolean">false</loop_fs>
-          <mount>/</mount>
-          <mountby config:type="symbol">device</mountby>
-          <partition_id config:type="integer">131</partition_id>
-          <partition_nr config:type="integer">2</partition_nr>
-          <raid_options/>
-          <resize config:type="boolean">false</resize>
-          <size>max</size>
-          <subvolumes config:type="list">
-            <listentry>boot/grub2/i386-pc</listentry>
-            <listentry>boot/grub2/x86_64-efi</listentry>
-            <listentry>home</listentry>
-            <listentry>opt</listentry>
-            <listentry>srv</listentry>
-            <listentry>tmp</listentry>
-            <listentry>usr/local</listentry>
-            <listentry>var/crash</listentry>
-            <listentry>var/lib/mailman</listentry>
-            <listentry>var/lib/named</listentry>
-            <listentry>var/lib/pgsql</listentry>
-            <listentry>var/log</listentry>
-            <listentry>var/opt</listentry>
-            <listentry>var/spool</listentry>
-            <listentry>var/tmp</listentry>
-          </subvolumes>
-        </partition>
+PARTITIONS
       </partitions>
       <pesize/>
       <type config:type="symbol">CT_DISK</type>
@@ -127,34 +82,37 @@
 
   <software>
     <image/>
-    <instsource/>
     <packages config:type="list">
       <package>grub2</package>
       <package>glibc-locale</package>
       <package>iputils</package>
       <package>kernel-default</package>
-      <package>kernel-default-devel</package>
-      <package>gcc</package>
-      <package>make</package>
+      <package>less</package>
+      <package>vim</package>
       <package>sudo</package>
+      <package>screen</package>
       <package>yast2</package>
       <package>yast2-firstboot</package>
       <package>zypper</package>
+      <package>open-vm-tools</package>
       <package>yast2-trans-en_US</package>
       <package>wget</package>
       <package>curl</package>
-      <package>grub2-branding-openSUSE</package>
+      <package>iproute2</package>
+      <package>openssh</package>
+      <package>e2fsprogs</package>
+      <package>acpid</package>
     </packages>
+    <do_online_update config:type="boolean">true</do_online_update>
+    <instsource>http://mirror.yandex.ru/opensuse/distribution/13.2/repo/oss/</instsource>
     <patterns config:type="list">
+      <pattern>base</pattern>
       <pattern>sw_management</pattern>
       <pattern>yast2_install_wf</pattern>
-      <pattern>minimal_base</pattern>
     </patterns>
     <remove-packages config:type="list">
       <package>bash-completion</package>
       <package>telnet</package>
-      <package>virtualbox-guest-kmp-default</package>
-      <package>virtualbox-guest-tools</package>
     </remove-packages>
   </software>
   <services-manager>
@@ -189,23 +147,6 @@
     <user>
       <user_password>SSH_PASSWORD</user_password>
       <username>SSH_USERNAME</username>
-    </user>
-    <user>
-      <fullname>clouder</fullname>
-      <gid>100</gid>
-      <home>/home/clouder</home>
-      <password_settings>
-        <expire/>
-        <flag/>
-        <inact>-1</inact>
-        <max>99999</max>
-        <min>0</min>
-        <warn>7</warn>
-      </password_settings>
-      <shell>/bin/bash</shell>
-      <uid>1000</uid>
-      <user_password>engine</user_password>
-      <username>clouder</username>
     </user>
   </users>
   <kdump>
