@@ -1,0 +1,10 @@
+  deb http://192.168.0.79/ubuntu/ precise main restricted universe multiverse
+  deb http://192.168.0.79/ubuntu/ precise-security main restricted universe multiverse
+  deb http://192.168.0.79/ubuntu/ precise-updates main restricted universe multiverse
+  deb http://192.168.0.79/ubuntu/ precise-proposed main restricted universe multiverse
+  deb http://192.168.0.79/ubuntu/ precise-backports main restricted universe multiverse
+  deb-src http://192.168.0.79/ubuntu/ precise main restricted universe multiverse
+  deb-src http://192.168.0.79/ubuntu/ precise-security main restricted universe multiverse
+  deb-src http://192.168.0.79/ubuntu/ precise-updates main restricted universe multiverse
+  deb-src http://192.168.0.79/ubuntu/ precise-proposed main restricted universe multiverse
+  deb-src http://192.168.0.79/ubuntu/ precise-backports main restricted universe multiverse

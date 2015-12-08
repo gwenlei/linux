@@ -1,0 +1,10 @@
+  deb http://192.168.0.79/ubuntu/ trusty main restricted universe multiverse
+  deb http://192.168.0.79/ubuntu/ trusty-security main restricted universe multiverse
+  deb http://192.168.0.79/ubuntu/ trusty-updates main restricted universe multiverse
+  deb http://192.168.0.79/ubuntu/ trusty-proposed main restricted universe multiverse
+  deb http://192.168.0.79/ubuntu/ trusty-backports main restricted universe multiverse
+  deb-src http://192.168.0.79/ubuntu/ trusty main restricted universe multiverse
+  deb-src http://192.168.0.79/ubuntu/ trusty-security main restricted universe multiverse
+  deb-src http://192.168.0.79/ubuntu/ trusty-updates main restricted universe multiverse
+  deb-src http://192.168.0.79/ubuntu/ trusty-proposed main restricted universe multiverse
+  deb-src http://192.168.0.79/ubuntu/ trusty-backports main restricted universe multiverse
