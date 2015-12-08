@@ -24,8 +24,8 @@
             "floppy_files": [
                 "WIN_CFG",
                 "RESULTDIRfloppy/drivers/virtio-win-0.1-81/WIN7/AMD64/*",
-                "RESULTDIRjsondir/floppy/common/*",
-                "RESULTDIRjsondir/floppy/windows-2012-standard-amd64/*"
+                "RESULTDIRfloppy/common/*",
+                "RESULTDIRfloppy/windows-2012-standard-amd64/*"
             ]
 
         }
