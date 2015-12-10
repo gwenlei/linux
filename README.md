@@ -6,4 +6,4 @@ this is a game hehe
 after bone
 	tab is 
 	space is
-
+		kangkangne
