@@ -7,3 +7,4 @@ after bone
 	tab is 
 	space is
 		kangkangne
+ 	kangkangne2
