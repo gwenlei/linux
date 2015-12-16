@@ -72,7 +72,7 @@ jar cvf test6.war *
 * deploy war in tomcat   
 login http://192.168.122.245:8080   
 Tomcat Manager with user:clouder password:engine  
-WAR file to deploy select HelloTomcat/test6.war
+WAR file to deploy select HelloTomcat/test6.war   
 now http://192.168.122.245:8080/test6 will show table account list
 
 ## ansible playbook
