@@ -7,6 +7,7 @@ packer build centos6-6.json
 ```
 * install mysql
 ```shell
+sed -i 's#SELINUX=enforcing#SELINUX=disabled#' /etc/selinux/config
 yum install -y -q mysql-server mysql mysql-deve
 service mysqld start
 chkconfig mysqld on
@@ -24,6 +25,7 @@ packer build centos6-6.json
 ```
 * install tomcat
 ```shell
+sed -i 's#SELINUX=enforcing#SELINUX=disabled#' /etc/selinux/config
 yum install -y -q tomcat6  tomcat6-webapps tomcat6-admin-webapps
 sed -i 's#</tomcat-users>#<role rolename="manager" /><user username="clouder" password="engine" roles="manager" /></tomcat-users>#' /etc/tomcat6/tomcat-users.xml
 service tomcat6 start
