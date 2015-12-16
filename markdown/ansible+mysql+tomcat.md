@@ -1,4 +1,5 @@
-# mysql镜像制作
+# ansible+mysql+tomcat
+## mysql镜像制作
 
 * make centos6.6 image
 ```shell
@@ -15,7 +16,7 @@ mysql -uroot -e "create table account(id int(4),name char(20));"
 mysql -uroot -e "insert into account values(1,'jack');"
 ```
 * ip 192.168.122.68
-# tomcat镜像制作
+## tomcat镜像制作
 * make centos6.6镜像
 ```shell
 packer build centos6-6.json
@@ -28,7 +29,7 @@ service tomcat6 start
 chkconfig tomcat6 on
 ```
 * ip 192.168.122.245
-# webapp deploy
+## webapp deploy
 * github clone hellotomcat
 ```shell
 git clone https://github.com/pjq/HelloTomcat.git
@@ -71,7 +72,7 @@ login http://192.168.122.245:8080
 Tomcat Manager with user:clouder password:engine  
 WAR file to deploy select HelloTomcat/test6.war
 now http://192.168.122.245:8080/test6 will show table account list
-# ansible playbook
+## ansible playbook
 this is the whole playbook directory
 ```list
 ├── hosts
