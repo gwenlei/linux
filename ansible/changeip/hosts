@@ -1,0 +1,5 @@
+# hosts
+[tomcat]
+192.168.122.67 ansible_ssh_user=root ansible_ssh_pass=engine NEWIPADDR=192.168.122.68 NEWNETMASK=255.255.0.0 NEWGATEWAY=192.168.122.1
+
+

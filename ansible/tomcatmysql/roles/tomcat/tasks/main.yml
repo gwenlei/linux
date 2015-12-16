@@ -1,0 +1,4 @@
+  - name: copy mysql.properties
+    template: src=mysql.properties dest=/usr/share/tomcat6/webapps/test6/WEB-INF/classes/mysql.properties
+  - name: restart tomcat6
+    service: name=tomcat6 state=restarted

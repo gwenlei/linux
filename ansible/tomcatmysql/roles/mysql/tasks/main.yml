@@ -1,0 +1,4 @@
+  - name: copy my.cnf
+    template: src=my.cnf dest=/etc/my.cnf
+  - name: restart mysqld
+    service: name=mysqld state=restarted

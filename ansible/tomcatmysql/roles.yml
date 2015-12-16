@@ -1,0 +1,6 @@
+- hosts: tomcat
+  roles:
+    - { role: tomcat }
+- hosts: mysql
+  roles:
+    - { role: mysql }

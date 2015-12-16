@@ -1,0 +1,8 @@
+---
+- hosts: all
+  remote_user: root
+  tasks:
+    - name: copy ifcfg-eth0
+      template: src=ifcfg-eth0 dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+    - name: restart network
+      command: ifdown eth0 && ifup eth0 
