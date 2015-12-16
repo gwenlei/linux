@@ -16,6 +16,7 @@ mysql -uroot -e "create table account(id int(4),name char(20));"
 mysql -uroot -e "insert into account values(1,'jack');"
 ```
 * ip 192.168.122.68
+
 ## tomcat镜像制作
 * make centos6.6镜像
 ```shell
@@ -29,6 +30,7 @@ service tomcat6 start
 chkconfig tomcat6 on
 ```
 * ip 192.168.122.245
+
 ## webapp deploy
 * github clone hellotomcat
 ```shell
@@ -72,6 +74,7 @@ login http://192.168.122.245:8080
 Tomcat Manager with user:clouder password:engine  
 WAR file to deploy select HelloTomcat/test6.war
 now http://192.168.122.245:8080/test6 will show table account list
+
 ## ansible playbook
 this is the whole playbook directory
 ```list
@@ -146,4 +149,8 @@ symbolic-links=0
 [mysqld_safe]
 log-error=/var/log/mysqld.log
 pid-file=/var/run/mysqld/mysqld.pid
+```
+when mysql ip changes, change the hosts file and run command
+```shell
+ansible-playbook -i hosts roles.yml
 ```
