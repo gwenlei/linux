@@ -1,6 +1,7 @@
 # install keepalived and ipvsadm
 ```
 yum install mysql-server mysql mysql-deve keepalived ipvsadm
+sed -i 's#net.ipv4.ip_forward = 0#net.ipv4.ip_forward = 1#' /etc/sysctl.conf
 ```
 # Mysql + KeepAliaved 搭建 Mysql 双 Master 集群的步骤
 ## 前提假设：    
@@ -12,7 +13,7 @@ yum install mysql-server mysql mysql-deve keepalived ipvsadm
 	两台mysql的用户名和密码是一样的     
 	$vip -> mysql 集群虚拟IP。注意，虚拟ip应该与 $myip1、$myip2 在同一网段    
 	$inteface -> 虚拟机 Real ip 所在的网卡，例如eth0      
-实际环境赋值:        
+实际环境赋值: centos6.6\mysql-5.1.73\keepalived-1.2.13       
 $myip1=192.168.122.68     
 $myip2=192.168.122.245    
 $myuser=slaver    
@@ -36,9 +37,9 @@ grant replication slave on *.* to '$myuser'@'$myip1' identified by '$mypwd';
 flush privileges;
 ```
 
-### 第二步:  修改 my.cnf      
+### 第二步:  修改 /etc/my.cnf      
 
-####1) 在 $myip1 的 my.cnf 添加如下配置：     
+####1) 在 $myip1 的 /etc/my.cnf 添加如下配置：     
 
 ```
 [mysqld]
@@ -55,7 +56,7 @@ auto_increment_offset=1
 ###########
 ```
 
-####2) 在 $myip2 的 my.conf 添加如下配置：       
+####2) 在 $myip2 的 /etc/my.conf 添加如下配置：       
 
 ```
 [mysqld]
