@@ -105,10 +105,47 @@ show slave status\G
 ###第五步： 配置 keepalived.conf 文件        
 
 ####1) 拷贝 check_MySQL.sh 文件到两个mysql节点:         
+```
+#!/bin/bash
 
+###检查mysql服务是否存在###
+
+MYSQL_HOST=localhost
+MYSQL_USER=root
+CHECK_COUNT=5
+
+counter=1
+while true
+do
+        mysql -h $MYSQL_HOST -u $MYSQL_USER -e "show status;"  >/dev/null 2>&1
+        i=$?
+        ps aux | grep mysqld | grep -v grep > /dev/null 2>&1
+        j=$?
+        if [ $i = 0 ] && [ $j = 0 ]
+        then
+                exit 0
+        else
+                if [ $i = 1 ] && [ $j = 0 ]
+                then
+                        exit 0
+                else
+                        if [ $counter -gt $CHECK_COUNT ]
+                        then
+                                break
+                        fi
+                let counter++
+                continue
+                fi
+        fi
+        done
+/etc/init.d/keepalived stop
+exit 1
+```
 ```
 scp check_MySQL.sh root@$myip1:/etc/keepalived/check_MySQL.sh
 scp check_MySQL.sh root@$myip2:/etc/keepalived/check_MySQL.sh
+chmod +x /etc/keepalived/check_MySQL.sh
+sh /etc/keepalived/check_MySQL.sh
 ```
 
 ####2) 修改 $myip1 的 keepalived.conf 内容为：        
@@ -195,49 +232,7 @@ vrrp_instance VI_1 {
 }
 ```
 
-###第六步：增加状态检查脚本/etc/keepalived/check_MySQL.sh,设置执行权限，手工验证能否正常执行
-```
-#!/bin/bash
-
-###检查mysql服务是否存在###
-
-MYSQL_HOST=localhost
-MYSQL_USER=root
-CHECK_COUNT=5
-
-counter=1
-while true
-do
-        mysql -h $MYSQL_HOST -u $MYSQL_USER -e "show status;"  >/dev/null 2>&1
-        i=$?
-        ps aux | grep mysqld | grep -v grep > /dev/null 2>&1
-        j=$?
-        if [ $i = 0 ] && [ $j = 0 ]
-        then
-                exit 0
-        else
-                if [ $i = 1 ] && [ $j = 0 ]
-                then
-                        exit 0
-                else
-                        if [ $counter -gt $CHECK_COUNT ]
-                        then
-                                break
-                        fi
-                let counter++
-                continue
-                fi
-        fi
-        done
-/etc/init.d/keepalived stop
-exit 1
-```
-```
-chmod +x /etc/keepalived/check_MySQL.sh
-sh /etc/keepalived/check_MySQL.sh
-```
- 
-###第七步： 重启 keepalived 文件:
+###第六步： 重启 keepalived 文件:
 
 ```
 ssh  root@$myip1 service keepalived restart
