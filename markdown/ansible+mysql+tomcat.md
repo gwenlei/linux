@@ -1,11 +1,11 @@
 # ansible+mysql+tomcat
 ## mysql镜像制作
 
-* make centos6.6 image
+Make centos6.6 image       
 ```shell
-packer build centos6-6.json
+Packer build centos6-6.json      
 ```
-* install mysql
+Install mysql     
 ```shell
 sed -i 's#SELINUX=enforcing#SELINUX=disabled#' /etc/selinux/config
 yum install -y -q mysql-server mysql mysql-deve
@@ -16,37 +16,38 @@ mysql -uroot -e "create database testdb;"
 mysql -uroot -e "create table account(id int(4),name char(20));"
 mysql -uroot -e "insert into account values(1,'jack');"
 ```
-* ip 192.168.122.68
+ip <192.168.122.68>      
 
-## tomcat镜像制作
-* make centos6.6镜像
+## tomcat镜像制作    
+Make centos6.6镜像     
 ```shell
 packer build centos6-6.json
 ```
-* install tomcat
+Install tomcat    
 ```shell
 sed -i 's#SELINUX=enforcing#SELINUX=disabled#' /etc/selinux/config
+yum install -y -q java-1.8.0-openjdk
 yum install -y -q tomcat6  tomcat6-webapps tomcat6-admin-webapps
 sed -i 's#</tomcat-users>#<role rolename="manager" /><user username="clouder" password="engine" roles="manager" /></tomcat-users>#' /etc/tomcat6/tomcat-users.xml
 service tomcat6 start
 chkconfig tomcat6 on
 ```
-* ip 192.168.122.245
+ip <192.168.122.245>     
 
 ## webapp deploy
-* github clone hellotomcat
+Github clone hellotomcat      
 ```shell
 git clone https://github.com/pjq/HelloTomcat.git
 cd HelloTomcat
 ```
-* modify WEB-INF/src/DataManager.java
+Modify WEB-INF/src/DataManager.java      
 ```java
 import java.util.Properties;
 ...
         public Connection getConnection() {
-                //String url = "jdbc:mysql://192.168.122.68:3306/testdb";
-                //String username = "root";
-                //String password = "engine";
+-                //String url = "jdbc:mysql://192.168.122.68:3306/testdb";
+-                //String username = "root";
+-                //String password = "engine";
 InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("mysql.properties");
 Properties p = new Properties();
 try {
