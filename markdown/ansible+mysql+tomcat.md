@@ -7,38 +7,37 @@ Packer build centos6-6.json
 ```
 Install mysql     
 ```shell
-sed -i 's#SELINUX=enforcing#SELINUX=disabled#' /etc/selinux/config
-yum install -y -q mysql-server mysql mysql-deve
-service mysqld start
-chkconfig mysqld on
-mysql -uroot -e "grant all privileges on *.* to 'root'@'%' identified by 'engine' with grant option;"
-mysql -uroot -e "create database testdb;"
-mysql -uroot -e "create table account(id int(4),name char(20));"
-mysql -uroot -e "insert into account values(1,'jack');"
+#sed -i 's#SELINUX=enforcing#SELINUX=disabled#' /etc/selinux/config
+#yum install -y -q mysql-server mysql mysql-deve
+#service mysqld start
+#chkconfig mysqld on
+#mysql -uroot -e "grant all privileges on *.* to 'root'@'%' identified by 'engine' with grant option;"
+#mysql -uroot -e "create database testdb;"
+#mysql -uroot -e "use testdb;create table account(id int(4),name char(20));insert into account values(1,'jack');"
 ```
-ip <192.168.122.68>      
+ip `<192.168.122.68>`      
 
-## tomcat镜像制作    
+## Tomcat镜像制作    
 Make centos6.6镜像     
 ```shell
 packer build centos6-6.json
 ```
 Install tomcat    
 ```shell
-sed -i 's#SELINUX=enforcing#SELINUX=disabled#' /etc/selinux/config
-yum install -y -q java-1.8.0-openjdk
-yum install -y -q tomcat6  tomcat6-webapps tomcat6-admin-webapps
-sed -i 's#</tomcat-users>#<role rolename="manager" /><user username="clouder" password="engine" roles="manager" /></tomcat-users>#' /etc/tomcat6/tomcat-users.xml
-service tomcat6 start
-chkconfig tomcat6 on
+#sed -i 's#SELINUX=enforcing#SELINUX=disabled#' /etc/selinux/config
+#yum install -y -q java-1.8.0-openjdk
+#yum install -y -q tomcat6  tomcat6-webapps tomcat6-admin-webapps
+#sed -i 's#</tomcat-users>#<role rolename="manager" /><user username="clouder" password="engine" roles="manager" /></tomcat-users>#' /etc/tomcat6/tomcat-users.xml
+#service tomcat6 start
+#chkconfig tomcat6 on
 ```
-ip <192.168.122.245>     
+ip `<192.168.122.245>`     
 
-## webapp deploy
-Github clone hellotomcat      
+## Webapp deploy
+Github clone HelloTomcat      
 ```shell
-git clone https://github.com/pjq/HelloTomcat.git
-cd HelloTomcat
+#git clone https://github.com/pjq/HelloTomcat.git
+#cd HelloTomcat
 ```
 Modify WEB-INF/src/DataManager.java      
 ```java
@@ -48,38 +47,47 @@ import java.util.Properties;
 -                //String url = "jdbc:mysql://192.168.122.68:3306/testdb";
 -                //String username = "root";
 -                //String password = "engine";
-InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("mysql.properties");
-Properties p = new Properties();
-try {
-p.load(inputStream);
-} catch (IOException e1) {
-e1.printStackTrace();
-}
++InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("mysql.properties");
++Properties p = new Properties();
++try {
++p.load(inputStream);
++} catch (IOException e1) {
++e1.printStackTrace();
++}
 ```
-* compile DataManager.java
+Compile DataManager.java
 ```shell
-javac DataManager.java
-cp DataManager.class ../classes
+#javac DataManager.java
+#cp DataManager.class ../classes
 ```
-* add WEB-INF/classes/mysql.properties
+Add WEB-INF/classes/mysql.properties
 ```text
 ip=192.168.122.245 
 user=root
 passwd=engine
 ```
-* make war
-```shell
-cd HelloTomcat
-jar cvf test6.war *
+Modify WEB-INF/web.xml
+```text
+        <servlet-mapping>
+                <servlet-name>query</servlet-name>
+                <url-pattern>/</url-pattern>
+        </servlet-mapping>
 ```
-* deploy war in tomcat   
+Make war
+```shell
+#cd HelloTomcat
+#jar cvf test6.war *
+```
+Deploy war in tomcat   
 login http://192.168.122.245:8080   
+ ![tomcat6 homepage](/images/tomcat6.png) 
 Tomcat Manager with user:clouder password:engine  
+![tomcat6 managerpage](/images/tomcat6manager.png)
 WAR file to deploy select HelloTomcat/test6.war   
 now http://192.168.122.245:8080/test6 will show table account list
-
-## ansible playbook
-this is the whole playbook directory
+![tomcat6 webapp page](/images/webapp.png)
+## Ansible playbook
+This is the whole playbook directory
 ```list
 ├── hosts
 ├── roles
@@ -97,7 +105,7 @@ this is the whole playbook directory
 │           └── mysql.properties
 └── roles.yml
 ```
-hosts include ip and variables
+File hosts include ip and variables
 ```text
 # hosts
 [mysql]
@@ -111,7 +119,7 @@ mysql_ip=192.168.122.245
 mysql_user=root
 mysql_password=engine
 ```
-roles.yml
+File roles.yml
 ```
 - hosts: tomcat
   roles:
@@ -120,27 +128,27 @@ roles.yml
   roles:
     - { role: mysql }
 ```
-roles/tomcat/tasks/main.yml
+File roles/tomcat/tasks/main.yml
 ```text
   - name: copy mysql.properties
     template: src=mysql.properties dest=/usr/share/tomcat6/webapps/test6/WEB-INF/classes/mysql.properties
   - name: restart tomcat6
     service: name=tomcat6 state=restarted
 ```
-roles/tomcat/templates/mysql.properties
+File roles/tomcat/templates/mysql.properties
 ```
 ip={{mysql_ip}} 
 user={{mysql_user}}
 passwd={{mysql_password}}
 ```
-roles/mysql/tasks/main.yml
+File roles/mysql/tasks/main.yml
 ```
   - name: copy my.cnf
     template: src=my.cnf dest=/etc/my.cnf
   - name: restart mysqld
     service: name=mysqld state=restarted
 ```
-roles/mysql/templates/my.cnf
+File roles/mysql/templates/my.cnf
 ```
 [mysqld]
 datadir=/var/lib/mysql
@@ -153,7 +161,7 @@ symbolic-links=0
 log-error=/var/log/mysqld.log
 pid-file=/var/run/mysqld/mysqld.pid
 ```
-when mysql ip changes, change the hosts file and run command
+When mysql ip changes, change the hosts file and run command
 ```shell
 ansible-playbook -i hosts roles.yml
 ```
