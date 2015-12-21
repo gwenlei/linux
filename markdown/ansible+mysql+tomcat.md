@@ -80,12 +80,12 @@ Make war
 ```
 Deploy war in tomcat   
 login http://192.168.122.245:8080   
- ![tomcat6 homepage](/images/tomcat6.png) 
+ ![tomcat6 homepage](https://github.com/gwenlei/linux/tree/master/markdown/images/tomcat6.png) 
 Tomcat Manager with user:clouder password:engine  
-![tomcat6 managerpage](/images/tomcat6manager.png)
+![tomcat6 managerpage](https://github.com/gwenlei/linux/tree/master/markdown/images/tomcat6manager.png)
 WAR file to deploy select HelloTomcat/test6.war   
 now http://192.168.122.245:8080/test6 will show table account list
-![tomcat6 webapp page](/images/webapp.png)
+![tomcat6 webapp page](https://github.com/gwenlei/linux/tree/master/markdown/images/webapp.png)
 ## Ansible playbook
 This is the whole playbook directory
 ```list
