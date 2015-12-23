@@ -15,7 +15,7 @@ Packer build centos6-6.json
 #mysql -uroot -e "create database testdb;"
 #mysql -uroot -e "use testdb;create table account(id int(4),name char(20));insert into account values(1,'jack');"
 ```
-ip `<192.168.122.68>`      
+在virt-manager默认网段中自动分配到的ip： `192.168.122.68`      
 
 ## Tomcat镜像制作    
 用packer制作centos6.6镜像     
@@ -75,8 +75,9 @@ packer build centos6-6.json
 +		String sqlString = "SELECT *  from "+p.getProperty("tablename");
 -		//String sqlString = "SELECT *  from tablea";
 ```
-重新编译DataManager.java\QueryDatabase.java，将生成的class文件替换原来的class
+重新编译DataManager.java、QueryDatabase.java，将生成的class文件替换原来的class
 ```shell
+＃cd WEB-INF/src/
 #javac DataManager.java
 #javac -classpath .:/usr/share/java/tomcat-servlet-3.0-api.jar QueryDatabase.java
 #\cp DataManager.class QueryDatabase.class ../classes
