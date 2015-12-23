@@ -6,13 +6,13 @@ sed -i 's#net.ipv4.ip_forward = 0#net.ipv4.ip_forward = 1#' /etc/sysctl.conf
 # Mysql + KeepAliaved 搭建 Mysql 双 Master 集群的步骤
 ## 前提假设：    
 所需的软件 mysql、keepalived、ipvsadm 已经安装     
-	$myip1 -> 第一台mysql所在的ip     
-	$myip2 -> 第二台mysql所在的ip     
-	$myuser -> mysql用户名      
-	$mypwd -> mysql用户密码      
-	两台mysql的用户名和密码是一样的     
-	$vip -> mysql 集群虚拟IP。注意，虚拟ip应该与 $myip1、$myip2 在同一网段    
-	$inteface -> 虚拟机 Real ip 所在的网卡，例如eth0      
+$myip1 -> 第一台mysql所在的ip     
+$myip2 -> 第二台mysql所在的ip     
+$myuser -> mysql用户名      
+$mypwd -> mysql用户密码      
+两台mysql的用户名和密码是一样的     
+$vip -> mysql 集群虚拟IP。注意，虚拟ip应该与 $myip1、$myip2 在同一网段    
+$inteface -> 虚拟机 Real ip 所在的网卡，例如eth0      
 实际环境赋值: centos6.6\mysql-5.1.73\keepalived-1.2.13       
 $myip1=192.168.122.68     
 $myip2=192.168.122.245    
@@ -101,6 +101,58 @@ CHANGE MASTER TO MASTER_PASSWORD='$mypwd';
 start slave;
 show slave status\G
 ```
+检查slave运行状态：
+```
+mysql> show slave status\G
+*************************** 1. row ***************************
+               Slave_IO_State: 
+                  Master_Host: 192.168.122.245
+                  Master_User: slaver
+                  Master_Port: 3306
+                Connect_Retry: 60
+              Master_Log_File: master-bin.000002
+          Read_Master_Log_Pos: 106
+               Relay_Log_File: mysqld-relay-bin.000012
+                Relay_Log_Pos: 4
+        Relay_Master_Log_File: master-bin.000002
+             Slave_IO_Running: No
+            Slave_SQL_Running: Yes
+              Replicate_Do_DB: 
+          Replicate_Ignore_DB: mysql,information_schema
+           Replicate_Do_Table: 
+       Replicate_Ignore_Table: 
+      Replicate_Wild_Do_Table: 
+  Replicate_Wild_Ignore_Table: 
+                   Last_Errno: 0
+                   Last_Error: 
+                 Skip_Counter: 0
+          Exec_Master_Log_Pos: 106
+              Relay_Log_Space: 212
+              Until_Condition: None
+               Until_Log_File: 
+                Until_Log_Pos: 0
+           Master_SSL_Allowed: No
+           Master_SSL_CA_File: 
+           Master_SSL_CA_Path: 
+              Master_SSL_Cert: 
+            Master_SSL_Cipher: 
+               Master_SSL_Key: 
+        Seconds_Behind_Master: NULL
+Master_SSL_Verify_Server_Cert: No
+                Last_IO_Errno: 1236
+                Last_IO_Error: Got fatal error 1236 from master when reading data from binary log: 'Binary log is not open'
+               Last_SQL_Errno: 0
+               Last_SQL_Error: 
+1 row in set (0.00 sec)
+mysql> show global variables like "serve%"
+    -> ;
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| server_id     | 1     |
++---------------+-------+
+1 row in set (0.00 sec)
+```
 
 ###第五步： 配置 keepalived.conf 文件        
 
@@ -141,11 +193,12 @@ do
 /etc/init.d/keepalived stop
 exit 1
 ```
+复制到/etc/keepalived/check_MySQL.sh，添加执行权限，手工验证脚本正确性：
 ```
-scp check_MySQL.sh root@$myip1:/etc/keepalived/check_MySQL.sh
-scp check_MySQL.sh root@$myip2:/etc/keepalived/check_MySQL.sh
-chmod +x /etc/keepalived/check_MySQL.sh
-sh /etc/keepalived/check_MySQL.sh
+#scp check_MySQL.sh root@$myip1:/etc/keepalived/check_MySQL.sh
+#scp check_MySQL.sh root@$myip2:/etc/keepalived/check_MySQL.sh
+#chmod +x /etc/keepalived/check_MySQL.sh
+#sh /etc/keepalived/check_MySQL.sh
 ```
 
 ####2) 修改 $myip1 的 keepalived.conf 内容为：        
@@ -237,4 +290,19 @@ vrrp_instance VI_1 {
 ```
 ssh  root@$myip1 service keepalived restart
 ssh  root@$myip2 service keepalived restart
+```
+keepalived成功运行的标志是vip自动添加到其中一台的eth0中
+```
+[root@mysql ~]# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP qlen 1000
+    link/ether 52:54:00:f2:79:35 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.68/16 brd 192.168.255.255 scope global eth0
+    inet 192.168.122.100/24 scope global eth0
+    inet6 fe80::5054:ff:fef2:7935/64 scope link 
+       valid_lft forever preferred_lft forever
 ```
