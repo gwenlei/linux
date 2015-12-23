@@ -61,7 +61,7 @@ packer build centos6-6.json
 
 ```
 修改WEB-INF/src/QueryDatabase.java中的表名改成读配置文件。
-```
+```java
 +import java.io.*;
 +import java.util.Properties;
 ...
