@@ -107,8 +107,8 @@ tablename=account
 进入管理页面user:clouder password:engine  
 ![tomcat6 managerpage](images/tomcat6manager.png)
 选择部署方式：WAR file to deploy 选择文件：HelloTomcat/test11.war   
-应用页面查看表数据http://192.168.122.245:8080/test6    
-![tomcat6 webapp page](images/webapp.png)
+打开应用页面查看表数据http://192.168.122.245:8080/test11    
+![tomcat6 webapp page](images/webapp111.png)
 ## Ansible playbook
 实现的功能是在tomcat上部署应用，修改上应用的配置文件，配置文件里一般是数据库ip、用户、密码等内容。
 playbook目录结构     
@@ -135,7 +135,7 @@ playbook目录结构
 └── roles.yml
 
 ```
-File hosts 指定ip和变量
+File hosts 指定ip、用户、密码和变量
 ```text
 # hosts
 [mysql]
