@@ -1,4 +1,12 @@
-  - name: copy mysql.properties
-    template: src=mysql.properties dest=/usr/share/tomcat6/webapps/test6/WEB-INF/classes/mysql.properties
+  - name: clean existing website content
+    shell: rm -rf {{webapp}}/test11 && rm -f {{webapp}}/test11.war 
+  - name: copy webapp
+    copy: src=HelloTomcat/test11.war dest={{webapp}}/ owner=tomcat group=tomcat
   - name: restart tomcat6
     service: name=tomcat6 state=restarted
+  - name: copy mysql.properties
+    template: src=mysql.properties dest={{webapp}}/test11/WEB-INF/classes/mysql.properties  owner=tomcat group=tomcat mode=0644
+  - name: restart tomcat6
+    service: name=tomcat6 state=restarted
+  - name: restart keepalived
+    service: name=keepalived state=restarted

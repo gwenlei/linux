@@ -1,12 +1,14 @@
 # hosts
 [mysql]
-192.168.122.69 ansible_ssh_user=root ansible_ssh_pass=engine
+#192.168.122.68 ansible_ssh_user=root ansible_ssh_pass=engine
 
 [tomcat]
 192.168.122.245 ansible_ssh_user=root ansible_ssh_pass=engine
 
 [tomcat:vars]
-mysql_ip=192.168.122.69
+webapp=/usr/share/tomcat6/webapps
+mysql_dbname=testdb
+mysql_ip=192.168.122.171
 mysql_user=root
 mysql_password=engine
 
