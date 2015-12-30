@@ -9,36 +9,37 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-        "path/filepath"
-        "os/exec"
 )
 
 var dat map[string](map[string]string)
 var reportlog map[string](map[string]string)
 
 func main() {
-        dat=make(map[string](map[string]string))
-        reportlog=make(map[string](map[string]string))
+	dat = make(map[string](map[string]string))
+	reportlog = make(map[string](map[string]string))
 	buf, _ := ioutil.ReadFile("static/data/data.json")
-        if len(buf)>0{
-	if err := json.Unmarshal(buf, &dat); err != nil {
-		panic(err)
+	if len(buf) > 0 {
+		if err := json.Unmarshal(buf, &dat); err != nil {
+			panic(err)
+		}
 	}
-        }
 	buf, _ = ioutil.ReadFile("static/data/reportlog.json")
-        if len(buf)>0{
-	if err := json.Unmarshal(buf, &reportlog); err != nil {
-		panic(err)
+	if len(buf) > 0 {
+		if err := json.Unmarshal(buf, &reportlog); err != nil {
+			panic(err)
+		}
 	}
-        }
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/", index)
 	http.HandleFunc("/build", build) //设置访问的路由
 	http.HandleFunc("/setdat", setdat)
-        http.HandleFunc("/report", report)
+	http.HandleFunc("/report", report)
+	http.HandleFunc("/upload", UploadServer)
 	err := http.ListenAndServe(dat["servermap"]["server"], nil) //设置监听的端口
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
@@ -109,7 +110,7 @@ func build(w http.ResponseWriter, r *http.Request) {
 		timest := buildjson(r)
 		fmt.Println("buildjson end", timest)
 		p := callpacker(timest)
-                go calltransform(p, timest)
+		go calltransform(p, timest)
 		http.Redirect(w, r, "/build", 302)
 	}
 }
@@ -127,62 +128,62 @@ func report(w http.ResponseWriter, r *http.Request) {
 		}
 		for _, v := range r.Form["clickt"] {
 			delete(reportlog, v)
-                        if err := exec.Command("rm", "-rf",dat["resultmap"]["resultdir"] +v).Run(); err != nil {
-                           fmt.Printf("Error removing build directory: %s %s\n", dat["resultmap"]["resultdir"] +v,err)
-                        }
-                        
+			if err := exec.Command("rm", "-rf", dat["resultmap"]["resultdir"]+v).Run(); err != nil {
+				fmt.Printf("Error removing build directory: %s %s\n", dat["resultmap"]["resultdir"]+v, err)
+			}
+
 		}
-                liner, _ := json.Marshal(reportlog)
-	        ioutil.WriteFile("static/data/reportlog.json", liner, 0)
-                
-                http.Redirect(w, r, "/report", 302)
+		liner, _ := json.Marshal(reportlog)
+		ioutil.WriteFile("static/data/reportlog.json", liner, 0)
+
+		http.Redirect(w, r, "/report", 302)
 	}
 }
 
 func buildjson(r *http.Request) (timest string) {
-        timest=time.Now().Format("20060102150405")
-        
-        //report
-        reportlog[timest]=make(map[string]string)
-        reportlog[timest]["resultdir"]= dat["resultmap"]["resultdir"] + timest + "/"
-        reportlog[timest]["timestamp"]=timest
-        reportlog[timest]["ostype"]=r.Form.Get("ostype")
-        reportlog[timest]["vmname"]=r.Form.Get("vmname")
-        reportlog[timest]["user"]=r.Form.Get("user")
-        reportlog[timest]["password"]=r.Form.Get("password")
-        reportlog[timest]["disksize"]=r.Form.Get("disksize")
-        reportlog[timest]["compat"]=r.Form.Get("compat")
-        reportlog[timest]["outputdir"]=reportlog[timest]["resultdir"]+"output/"
-        reportlog[timest]["status"]="waiting"
-        for k, v := range r.Form["part"] {
-             reportlog[timest]["part"]=reportlog[timest]["part"]+v+":"+r.Form["size"][k]+" "
+	timest = time.Now().Format("20060102150405")
+
+	//report
+	reportlog[timest] = make(map[string]string)
+	reportlog[timest]["resultdir"] = dat["resultmap"]["resultdir"] + timest + "/"
+	reportlog[timest]["timestamp"] = timest
+	reportlog[timest]["ostype"] = r.Form.Get("ostype")
+	reportlog[timest]["vmname"] = r.Form.Get("vmname")
+	reportlog[timest]["user"] = r.Form.Get("user")
+	reportlog[timest]["password"] = r.Form.Get("password")
+	reportlog[timest]["disksize"] = r.Form.Get("disksize")
+	reportlog[timest]["compat"] = r.Form.Get("compat")
+	reportlog[timest]["outputdir"] = reportlog[timest]["resultdir"] + "output/"
+	reportlog[timest]["status"] = "waiting"
+	for k, v := range r.Form["part"] {
+		reportlog[timest]["part"] = reportlog[timest]["part"] + v + ":" + r.Form["size"][k] + " "
 	}
-        for _, v := range r.Form["software"] {
-             reportlog[timest]["software"]=reportlog[timest]["software"]+v+"\n"
-	}   
-   	liner, _ := json.Marshal(reportlog)
-        ioutil.WriteFile("static/data/reportlog.json", liner, 0)
-	
+	for _, v := range r.Form["software"] {
+		reportlog[timest]["software"] = reportlog[timest]["software"] + v + "\n"
+	}
+	liner, _ := json.Marshal(reportlog)
+	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
+
 	os.MkdirAll(reportlog[timest]["resultdir"], 0777)
 	os.MkdirAll(reportlog[timest]["resultdir"]+"json/", 0777)
 	os.MkdirAll(reportlog[timest]["resultdir"]+"script/", 0777)
 	os.MkdirAll(reportlog[timest]["resultdir"]+"cfg/", 0777)
-        tmplog:=reportlog[timest]["resultdir"]+"form.log"
-        os.Create(tmplog)
-        var tmplogs string
-        for k, v := range r.Form {
-	    tmplogs=tmplogs+k+":"
-            for _, v1 := range v {
-	       tmplogs=tmplogs+v1+" "
-	    }
-            tmplogs=tmplogs+"\n"
+	tmplog := reportlog[timest]["resultdir"] + "form.log"
+	os.Create(tmplog)
+	var tmplogs string
+	for k, v := range r.Form {
+		tmplogs = tmplogs + k + ":"
+		for _, v1 := range v {
+			tmplogs = tmplogs + v1 + " "
+		}
+		tmplogs = tmplogs + "\n"
 	}
-        ioutil.WriteFile(tmplog, []byte(tmplogs), 0)
+	ioutil.WriteFile(tmplog, []byte(tmplogs), 0)
 	json := dat["jsonmap"][r.Form.Get("ostype")]
-	reportlog[timest]["newjson"]= reportlog[timest]["resultdir"]+"json/" + json[strings.LastIndex(json, "/")+1:]
+	reportlog[timest]["newjson"] = reportlog[timest]["resultdir"] + "json/" + json[strings.LastIndex(json, "/")+1:]
 	cfg := dat["cfgmap"][r.Form.Get("ostype")]
-	reportlog[timest]["newcfg"]= reportlog[timest]["resultdir"]+"cfg/" + cfg[strings.LastIndex(cfg, "/")+1:]
-	reportlog[timest]["newcfgs"] = "http://"+dat["servermap"]["server"]+"/" + reportlog[timest]["newcfg"]
+	reportlog[timest]["newcfg"] = reportlog[timest]["resultdir"] + "cfg/" + cfg[strings.LastIndex(cfg, "/")+1:]
+	reportlog[timest]["newcfgs"] = "http://" + dat["servermap"]["server"] + "/" + reportlog[timest]["newcfg"]
 	reportlog[timest]["iso"] = dat["isomap"][r.Form.Get("ostype")]
 	disksizen, _ := strconv.Atoi(r.Form.Get("disksize"))
 	disksizens := strconv.Itoa(disksizen * 1024)
@@ -198,8 +199,8 @@ func buildjson(r *http.Request) (timest string) {
 	line = strings.Replace(line, "ISO_CHECKSUM", dat["md5map"][dat["isomap"][r.Form.Get("ostype")]], -1)
 	line = strings.Replace(line, "ISO_URL", reportlog[timest]["iso"], -1)
 	line = strings.Replace(line, "KS_CFG", reportlog[timest]["newcfgs"], -1)
-        line = strings.Replace(line, "WIN_CFG", reportlog[timest]["newcfg"], -1)
-        line = strings.Replace(line, "RESULTDIR", reportlog[timest]["resultdir"], -1)
+	line = strings.Replace(line, "WIN_CFG", reportlog[timest]["newcfg"], -1)
+	line = strings.Replace(line, "RESULTDIR", reportlog[timest]["resultdir"], -1)
 	line = strings.Replace(line, "HEADLESS", r.Form.Get("headless"), -1)
 	var script = make([]string, 10)
 	var newscript = make([]string, 10)
@@ -210,7 +211,7 @@ func buildjson(r *http.Request) (timest string) {
 		var scriptfiles string
 		for k, v := range script {
 			fmt.Println(k, v)
-			newscript[k] = reportlog[timest]["resultdir"]+"script/" + v[strings.LastIndex(v, "/")+1:]
+			newscript[k] = reportlog[timest]["resultdir"] + "script/" + v[strings.LastIndex(v, "/")+1:]
 			scriptfiles = scriptfiles + "\"" + newscript[k] + "\""
 			n = n - 1
 			// copy script
@@ -236,66 +237,66 @@ func buildjson(r *http.Request) (timest string) {
 
 	// new cfg file part
 	var partitions string
-        if index:=strings.LastIndex(r.Form.Get("ostype"),"CentOS");index>=0 {
-	   for k, v := range r.Form["part"] {
-		sizen, _ := strconv.Atoi(r.Form["size"][k])
-		sizens := strconv.Itoa(sizen * 1024)
-                if v=="swap" {
-                  partitions = partitions + "part swap --size=" + sizens + "\n"
-                }else{
-		  partitions = partitions + "part " + v + " --fstype=ext4 --size=" + sizens + "\n"
-                }
-	   }
-        }else if index:=strings.LastIndex(r.Form.Get("ostype"),"Ubuntu");index>=0 {
-	   for k, v := range r.Form["part"] {
-		sizen, _ := strconv.Atoi(r.Form["size"][k])
-		sizens := strconv.Itoa(sizen * 1024)
-                if k==0 {
-                partitions = partitions + "d-i partman-auto/method string regular\nd-i partman-auto/expert_recipe string boot-root :: "
-                if v=="swap" {
-                partitions = partitions + "64 "+sizens+" 300% $primary{ } linux-swap method{ swap } format{ } . "
-                }else if v=="/boot" {
-                partitions = partitions + "64 "+sizens+" 200 ext4 $primary{ } $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ /boot } "
-                }else{
-		partitions = partitions + sizens+" 4000 -1 ext4 $primary{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ "+v+" } . "
-                }
-                }else {
-                if v=="swap" {
-                partitions = partitions + "64 "+sizens+" 300% linux-swap method{ swap } format{ } . "
-                }else if v=="/boot" {
-                partitions = partitions + "64 "+sizens+" 200 ext4 $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ /boot } "
-                }else{
-		partitions = partitions + sizens+" 4000 -1 ext4 method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ "+v+" } . "
-                }
-                }
-	   }
-        }else if index:=strings.LastIndex(r.Form.Get("ostype"),"OpenSuse");index>=0 {
-	   for k, v := range r.Form["part"] {
-                partitions = partitions+"<partition><create config:type=\"boolean\">true</create><crypt_fs config:type=\"boolean\">false</crypt_fs><filesystem config:type=\"symbol\">btrfs</filesystem><format config:type=\"boolean\">true</format><loop_fs config:type=\"boolean\">false</loop_fs><mount>"+v+"</mount><mountby config:type=\"symbol\">device</mountby><partition_id config:type=\"integer\">"+strconv.Itoa(130+k+1)+"</partition_id><partition_nr config:type=\"integer\">"+strconv.Itoa(1+k)+"</partition_nr><raid_options/><resize config:type=\"boolean\">false</resize><size>"+r.Form["size"][k]+"G</size></partition>\n"
-           }
-        }
-        var partitionadd string
-        var partitionmodify string
-        if index:=strings.LastIndex(r.Form.Get("ostype"),"Windows");index>=0 {
-	   for k, v := range r.Form["part"] {
-		sizen, _ := strconv.Atoi(r.Form["size"][k])
-		sizens := strconv.Itoa(sizen * 1024)
-                partitionadd = partitionadd + "<CreatePartition wcm:action=\"add\"><Order>"+strconv.Itoa(k+1)+"</Order><Type>Primary</Type><Extend>false</Extend><Size>"+sizens+"</Size></CreatePartition>\n"
-                partitionmodify = partitionmodify + "<ModifyPartition wcm:action=\"add\"><Format>NTFS</Format><Label>"+r.Form.Get("ostype")+"</Label><Letter>"+v+"</Letter><Order>"+strconv.Itoa(k+1)+"</Order><PartitionID>"+strconv.Itoa(k+1)+"</PartitionID></ModifyPartition>\n"
-	   }
-        }
+	if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS"); index >= 0 {
+		for k, v := range r.Form["part"] {
+			sizen, _ := strconv.Atoi(r.Form["size"][k])
+			sizens := strconv.Itoa(sizen * 1024)
+			if v == "swap" {
+				partitions = partitions + "part swap --size=" + sizens + "\n"
+			} else {
+				partitions = partitions + "part " + v + " --fstype=ext4 --size=" + sizens + "\n"
+			}
+		}
+	} else if index := strings.LastIndex(r.Form.Get("ostype"), "Ubuntu"); index >= 0 {
+		for k, v := range r.Form["part"] {
+			sizen, _ := strconv.Atoi(r.Form["size"][k])
+			sizens := strconv.Itoa(sizen * 1024)
+			if k == 0 {
+				partitions = partitions + "d-i partman-auto/method string regular\nd-i partman-auto/expert_recipe string boot-root :: "
+				if v == "swap" {
+					partitions = partitions + "64 " + sizens + " 300% $primary{ } linux-swap method{ swap } format{ } . "
+				} else if v == "/boot" {
+					partitions = partitions + "64 " + sizens + " 200 ext4 $primary{ } $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ /boot } "
+				} else {
+					partitions = partitions + sizens + " 4000 -1 ext4 $primary{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ " + v + " } . "
+				}
+			} else {
+				if v == "swap" {
+					partitions = partitions + "64 " + sizens + " 300% linux-swap method{ swap } format{ } . "
+				} else if v == "/boot" {
+					partitions = partitions + "64 " + sizens + " 200 ext4 $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ /boot } "
+				} else {
+					partitions = partitions + sizens + " 4000 -1 ext4 method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ " + v + " } . "
+				}
+			}
+		}
+	} else if index := strings.LastIndex(r.Form.Get("ostype"), "OpenSuse"); index >= 0 {
+		for k, v := range r.Form["part"] {
+			partitions = partitions + "<partition><create config:type=\"boolean\">true</create><crypt_fs config:type=\"boolean\">false</crypt_fs><filesystem config:type=\"symbol\">btrfs</filesystem><format config:type=\"boolean\">true</format><loop_fs config:type=\"boolean\">false</loop_fs><mount>" + v + "</mount><mountby config:type=\"symbol\">device</mountby><partition_id config:type=\"integer\">" + strconv.Itoa(130+k+1) + "</partition_id><partition_nr config:type=\"integer\">" + strconv.Itoa(1+k) + "</partition_nr><raid_options/><resize config:type=\"boolean\">false</resize><size>" + r.Form["size"][k] + "G</size></partition>\n"
+		}
+	}
+	var partitionadd string
+	var partitionmodify string
+	if index := strings.LastIndex(r.Form.Get("ostype"), "Windows"); index >= 0 {
+		for k, v := range r.Form["part"] {
+			sizen, _ := strconv.Atoi(r.Form["size"][k])
+			sizens := strconv.Itoa(sizen * 1024)
+			partitionadd = partitionadd + "<CreatePartition wcm:action=\"add\"><Order>" + strconv.Itoa(k+1) + "</Order><Type>Primary</Type><Extend>false</Extend><Size>" + sizens + "</Size></CreatePartition>\n"
+			partitionmodify = partitionmodify + "<ModifyPartition wcm:action=\"add\"><Format>NTFS</Format><Label>" + r.Form.Get("ostype") + "</Label><Letter>" + v + "</Letter><Order>" + strconv.Itoa(k+1) + "</Order><PartitionID>" + strconv.Itoa(k+1) + "</PartitionID></ModifyPartition>\n"
+		}
+	}
 	os.Create(reportlog[timest]["newcfg"])
 	buf, _ = ioutil.ReadFile(cfg)
 	line = string(buf)
 	line = strings.Replace(line, "SSH_USERNAME", r.Form.Get("user"), -1)
 	line = strings.Replace(line, "SSH_PASSWORD", r.Form.Get("password"), -1)
 	line = strings.Replace(line, "PARTITIONS", partitions, -1)
-        line = strings.Replace(line, "PARTITONADD", partitionadd, -1)
-        line = strings.Replace(line, "PARTITONMODIFY", partitionmodify, -1)
+	line = strings.Replace(line, "PARTITONADD", partitionadd, -1)
+	line = strings.Replace(line, "PARTITONMODIFY", partitionmodify, -1)
 	ioutil.WriteFile(reportlog[timest]["newcfg"], []byte(line), 0)
-        if index:=strings.LastIndex(r.Form.Get("ostype"),"Windows");index>=0 {
-          copydir("template/floppy",timest)
-        }
+	if index := strings.LastIndex(r.Form.Get("ostype"), "Windows"); index >= 0 {
+		copydir("template/floppy", timest)
+	}
 
 	fmt.Println(reportlog[timest]["newjson"])
 	return timest
@@ -314,11 +315,11 @@ func callpacker(timest string) *os.Process {
 		fmt.Println(err.Error())
 	}
 	fmt.Println("p=[", p, "]")
-        reportlog[timest]["packerpid"]=strconv.Itoa(p.Pid)
+	reportlog[timest]["packerpid"] = strconv.Itoa(p.Pid)
 	return p
 }
-func calltransform(p *os.Process, timest string){        
-	if checkstatus(p,"packer",timest)==true && reportlog[timest]["compat"] == "0.1" {
+func calltransform(p *os.Process, timest string) {
+	if checkstatus(p, "packer", timest) == true && reportlog[timest]["compat"] == "0.1" {
 		fmt.Println("calltransform")
 		inf, _ := os.Create(reportlog[timest]["resultdir"] + "inf2.log")
 		outf, _ := os.Create(reportlog[timest]["resultdir"] + "convert.log")
@@ -327,8 +328,8 @@ func calltransform(p *os.Process, timest string){
 			//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
 			Files: []*os.File{inf, outf, errf},
 		}
-		output:=reportlog[timest]["resultdir"]+"output/"+reportlog[timest]["vmname"]
-		newoutput:=reportlog[timest]["resultdir"]+"output/tr"+reportlog[timest]["vmname"]
+		output := reportlog[timest]["resultdir"] + "output/" + reportlog[timest]["vmname"]
+		newoutput := reportlog[timest]["resultdir"] + "output/tr" + reportlog[timest]["vmname"]
 		fmt.Println("output=[", output, "]")
 		fmt.Println("newoutput=[", newoutput, "]")
 		p2, err := os.StartProcess("/bin/qemu-img", []string{"/bin/qemu-img", "convert", "-f", "qcow2", output, "-O", "qcow2", "-o", "compat=0.10", newoutput}, attr)
@@ -336,56 +337,136 @@ func calltransform(p *os.Process, timest string){
 			fmt.Println(err.Error())
 		}
 		fmt.Println("p2=[", p2, "]")
-		reportlog[timest]["transformpid"]=strconv.Itoa(p2.Pid)
-		go checkstatus(p2,"transform",timest)		
+		reportlog[timest]["transformpid"] = strconv.Itoa(p2.Pid)
+		go checkstatus(p2, "transform", timest)
 	}
 }
-func checkstatus(p *os.Process,pname string,timest string)bool{
-        fmt.Println("checkstatus", pname,p)
-        reportlog[timest]["status"]=pname+" running"
-        reportlog[timest][pname+"start"]=time.Now().Format("20060102150405")
-        liner, _ := json.Marshal(reportlog)
+func checkstatus(p *os.Process, pname string, timest string) bool {
+	fmt.Println("checkstatus", pname, p)
+	reportlog[timest]["status"] = pname + " running"
+	reportlog[timest][pname+"start"] = time.Now().Format("20060102150405")
+	liner, _ := json.Marshal(reportlog)
 	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
 	pw, _ := p.Wait()
-        fmt.Println("checkstatus over", p)
-        fmt.Println("timest=", timest)
-        reportlog[timest][pname+"stop"]=time.Now().Format("20060102150405")
-        t1,_:=time.Parse("20060102150405",reportlog[timest][pname+"stop"])
-        t2,_:=time.Parse("20060102150405",reportlog[timest][pname+"start"])
-        reportlog[timest][pname+"time"]=strconv.Itoa(int(t1.Sub(t2))/1e9)
-        fmt.Println("t1=", t1)
-        fmt.Println("t2=", t2)
-        fmt.Println("cost=",t1.Sub(t2))
-        status:=pw.Success();
-        if status==true {
-            reportlog[timest]["status"]=pname+" success"
-            fmt.Println("checkstatus over success ",pname, p)
-        }else{
-	    reportlog[timest]["status"]=pname+" failed"
-            fmt.Println("checkstatus over failed ",pname, p)
-        }
-        liner, _ = json.Marshal(reportlog)
+	fmt.Println("checkstatus over", p)
+	fmt.Println("timest=", timest)
+	reportlog[timest][pname+"stop"] = time.Now().Format("20060102150405")
+	t1, _ := time.Parse("20060102150405", reportlog[timest][pname+"stop"])
+	t2, _ := time.Parse("20060102150405", reportlog[timest][pname+"start"])
+	reportlog[timest][pname+"time"] = strconv.Itoa(int(t1.Sub(t2)) / 1e9)
+	fmt.Println("t1=", t1)
+	fmt.Println("t2=", t2)
+	fmt.Println("cost=", t1.Sub(t2))
+	status := pw.Success()
+	if status == true {
+		reportlog[timest]["status"] = pname + " success"
+		fmt.Println("checkstatus over success ", pname, p)
+	} else {
+		reportlog[timest]["status"] = pname + " failed"
+		fmt.Println("checkstatus over failed ", pname, p)
+	}
+	liner, _ = json.Marshal(reportlog)
 	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
-        return status
+	return status
 
 }
 
-func copydir(path string,timest string) {
-        err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
-                if ( f == nil ) {return err}
-                if f.IsDir() {
-                  os.MkdirAll(strings.Replace(path, "template/", reportlog[timest]["resultdir"], -1), 0777)
-                  return nil
-                }
+func copydir(path string, timest string) {
+	err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
+		if f == nil {
+			return err
+		}
+		if f.IsDir() {
+			os.MkdirAll(strings.Replace(path, "template/", reportlog[timest]["resultdir"], -1), 0777)
+			return nil
+		}
 		newfil, _ := os.Create(strings.Replace(path, "template/", reportlog[timest]["resultdir"], -1))
 		oldfil, _ := os.Open(path)
 		io.Copy(newfil, oldfil)
-                oldfil.Close()
-                println(path)
-                println(strings.Replace(path, "template/", reportlog[timest]["resultdir"], -1))
-                return nil
-        })
-        if err != nil {
-                fmt.Printf("filepath.Walk() returned %v\n", err)
-        }
+		oldfil.Close()
+		println(path)
+		println(strings.Replace(path, "template/", reportlog[timest]["resultdir"], -1))
+		return nil
+	})
+	if err != nil {
+		fmt.Printf("filepath.Walk() returned %v\n", err)
+	}
+}
+
+func UploadServer(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("文件上传异常")
+		}
+	}()
+
+	if "POST" == r.Method {
+
+		r.ParseMultipartForm(32 << 20) //在使用r.MultipartForm前必须先调用ParseMultipartForm方法，参数为最大缓存
+		// fmt.Println(r.MultipartForm)
+		// fmt.Println(r.MultipartReader())
+		if r.MultipartForm != nil && r.MultipartForm.File != nil {
+			fhs := r.MultipartForm.File["userfile"] //获取所有上传文件信息
+			num := len(fhs)
+
+			fmt.Printf("总文件数：%d 个文件", num)
+
+			//循环对每个文件进行处理
+			for n, fheader := range fhs {
+				//获取文件名
+				filename := fheader.Filename
+
+				//结束文件
+				file, err := fheader.Open()
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				//保存文件
+				defer file.Close()
+				f, err := os.Create("static/upload/" + filename)
+				defer f.Close()
+				io.Copy(f, file)
+
+				//获取文件状态信息
+				fstat, _ := f.Stat()
+
+				//打印接收信息
+				fmt.Fprintf(w, "%s  NO.: %d  Size: %d KB  Name：%s\n", time.Now().Format("2006-01-02 15:04:05"), n, fstat.Size()/1024, filename)
+				fmt.Printf("%s  NO.: %d  Size: %d KB  Name：%s\n", time.Now().Format("2006-01-02 15:04:05"), n, fstat.Size()/1024, filename)
+
+			}
+		}
+
+		return
+	} else {
+		indexHandle(w, r)
+	}
+
+}
+
+func indexHandle(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("获取页面失败")
+		}
+	}()
+
+	// 上传页面
+	w.Header().Add("Content-Type", "text/html")
+	w.WriteHeader(200)
+	html := `
+		<html>
+	    <head>
+	        <title>Golang Upload Files</title>
+	    </head>
+	    <body>
+	        <form id="uploadForm"  enctype="multipart/form-data" action="/upload" method="POST">
+	            <p>Golang Upload</p> <br/>
+	            <input type="file" id="file1" name="userfile" multiple />	<br/>
+	            <input type="submit" value="Upload">
+	        </form>
+	   	</body>
+		</html>`
+	io.WriteString(w, html)
 }
