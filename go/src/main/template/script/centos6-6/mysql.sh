@@ -3,5 +3,4 @@ service mysqld start
 chkconfig mysqld on
 mysql -uroot -e "grant all privileges on *.* to 'root'@'%' identified by 'engine' with grant option;"
 mysql -uroot -e "create database testdb;"
-mysql -uroot -e "create table account(id int(4),name char(20));"
-mysql -uroot -e "insert into account values(1,'jack');"
+mysql -uroot -e "use testdb;create table tablea(id int(4),name char(20));insert into tablea values(1,'jack');"
