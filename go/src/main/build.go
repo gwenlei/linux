@@ -78,7 +78,7 @@ func setdat(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		//reset dat map
-		tmp := [...]string{"jsonmap", "cfgmap", "isomap", "md5map", "scriptmap", "resultmap", "servermap"}
+		tmp := [...]string{"jsonmap", "cfgmap", "isomap", "md5map", "scriptmap", "resultmap", "servermap", "floppymap"}
 		for _, vt := range tmp {
 			for k, v := range r.Form[vt+"+fieldid"] {
 				dat[vt][v] = r.Form[vt+"+fieldvalue"][k]
@@ -295,7 +295,7 @@ func buildjson(r *http.Request) (timest string) {
 	line = strings.Replace(line, "PARTITONMODIFY", partitionmodify, -1)
 	ioutil.WriteFile(reportlog[timest]["newcfg"], []byte(line), 0)
 	if index := strings.LastIndex(r.Form.Get("ostype"), "Windows"); index >= 0 {
-		copydir("template/floppy", timest)
+		copydir(dat["floppymap"][r.Form.Get("ostype")], timest)
 	}
 
 	fmt.Println(reportlog[timest]["newjson"])
