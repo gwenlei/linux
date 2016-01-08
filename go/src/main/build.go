@@ -399,9 +399,10 @@ func UploadServer(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("文件上传异常")
 		}
 	}()
-
-	if "POST" == r.Method {
-
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("upload.html")
+		t.Execute(w, nil)
+	} else {
 		r.ParseMultipartForm(32 << 20) //在使用r.MultipartForm前必须先调用ParseMultipartForm方法，参数为最大缓存
 		// fmt.Println(r.MultipartForm)
 		// fmt.Println(r.MultipartReader())
@@ -439,8 +440,6 @@ func UploadServer(w http.ResponseWriter, r *http.Request) {
 		}
 
 		return
-	} else {
-		indexHandle(w, r)
 	}
 
 }
