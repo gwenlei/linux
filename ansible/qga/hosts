@@ -1,0 +1,8 @@
+[windows]
+192.168.122.66
+
+[windows:vars]
+ansible_ssh_user=clouder
+ansible_ssh_pass=engine
+ansible_ssh_port=5986
+ansible_connection=winrm

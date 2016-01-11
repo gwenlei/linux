@@ -1,0 +1,6 @@
+---
+- hosts: windows
+  user: clouder
+  connection: winrm
+  roles:
+    - { role : qga }
