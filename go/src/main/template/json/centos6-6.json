@@ -29,9 +29,12 @@
          [ "-m", "1024M" ]
       ],
       "boot_wait": "5s",
+      "floppy_files": [
+          "KS_CFG"
+      ],
       "boot_command":
       [
-        "<tab> text ks=KS_CFG<enter><wait>"
+        "<tab> text ks=floppy:/centos6-6.cfg --noverifyssl <enter><wait>"
       ]
     }
   ]

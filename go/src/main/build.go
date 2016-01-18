@@ -40,7 +40,8 @@ func main() {
 	http.HandleFunc("/setdat", setdat)
 	http.HandleFunc("/report", report)
 	http.HandleFunc("/upload", UploadServer)
-	err := http.ListenAndServe(dat["servermap"]["server"], nil) //设置监听的端口
+	//err := http.ListenAndServe(dat["servermap"]["server"], nil) //设置监听的端口
+	err := http.ListenAndServeTLS(dat["servermap"]["server"], "server.crt", "server.key", nil) //设置监听的端口
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
@@ -183,7 +184,8 @@ func buildjson(r *http.Request) (timest string) {
 	reportlog[timest]["newjson"] = reportlog[timest]["resultdir"] + "json/" + json[strings.LastIndex(json, "/")+1:]
 	cfg := dat["cfgmap"][r.Form.Get("ostype")]
 	reportlog[timest]["newcfg"] = reportlog[timest]["resultdir"] + "cfg/" + cfg[strings.LastIndex(cfg, "/")+1:]
-	reportlog[timest]["newcfgs"] = "http://" + dat["servermap"]["server"] + "/" + reportlog[timest]["newcfg"]
+	//reportlog[timest]["newcfgs"] = "https://" + dat["servermap"]["server"] + "/" + reportlog[timest]["newcfg"]
+	reportlog[timest]["newcfgs"] = reportlog[timest]["newcfg"]
 	reportlog[timest]["iso"] = dat["isomap"][r.Form.Get("ostype")]
 	disksizen, _ := strconv.Atoi(r.Form.Get("disksize"))
 	disksizens := strconv.Itoa(disksizen * 1024)
@@ -410,7 +412,7 @@ func UploadServer(w http.ResponseWriter, r *http.Request) {
 			fhs := r.MultipartForm.File["userfile"] //获取所有上传文件信息
 			num := len(fhs)
 
-			fmt.Printf("总文件数：%d 个文件", num)
+			fmt.Printf("total：%d files", num)
 
 			//循环对每个文件进行处理
 			for n, fheader := range fhs {
