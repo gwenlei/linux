@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -207,7 +206,7 @@ func buildjson(r *http.Request) (timest string) {
 	line = strings.Replace(line, "FLOPPY_CFG", reportlog[timest]["newcfg"], -1)
 	line = strings.Replace(line, "KS_CFG", reportlog[timest]["newcfgs"], -1)
 	line = strings.Replace(line, "WIN_CFG", reportlog[timest]["newcfg"], -1)
-	line = strings.Replace(line, "RESULTDIR", reportlog[timest]["resultdir"], -1)
+	line = strings.Replace(line, "FLOPPYDIR", reportlog[timest]["resultdir"]+dat["floppymap"][r.Form.Get("ostype")][strings.LastIndex(dat["floppymap"][r.Form.Get("ostype")], "/")+1:], -1)
 	line = strings.Replace(line, "HEADLESS", r.Form.Get("headless"), -1)
 	var script = make([]string, 10)
 	var newscript = make([]string, 10)
@@ -302,7 +301,7 @@ func buildjson(r *http.Request) (timest string) {
 	line = strings.Replace(line, "PARTITONMODIFY", partitionmodify, -1)
 	ioutil.WriteFile(reportlog[timest]["newcfg"], []byte(line), 0)
 	if index := strings.LastIndex(r.Form.Get("ostype"), "Windows"); index >= 0 {
-		copydir(dat["floppymap"][r.Form.Get("ostype")], timest)
+		CopyDir(dat["floppymap"][r.Form.Get("ostype")], reportlog[timest]["resultdir"]+dat["floppymap"][r.Form.Get("ostype")][strings.LastIndex(dat["floppymap"][r.Form.Get("ostype")], "/")+1:])
 	}
 
 	fmt.Println(reportlog[timest]["newjson"])
@@ -378,26 +377,74 @@ func checkstatus(p *os.Process, pname string, timest string) bool {
 
 }
 
-func copydir(path string, timest string) {
-	err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
-		if f == nil {
-			return err
-		}
-		if f.IsDir() {
-			os.MkdirAll(strings.Replace(path, "template/", reportlog[timest]["resultdir"], -1), 0777)
-			return nil
-		}
-		newfil, _ := os.Create(strings.Replace(path, "template/", reportlog[timest]["resultdir"], -1))
-		oldfil, _ := os.Open(path)
-		io.Copy(newfil, oldfil)
-		oldfil.Close()
-		println(path)
-		println(strings.Replace(path, "template/", reportlog[timest]["resultdir"], -1))
-		return nil
-	})
+func CopyFile(source string, dest string) (err error) {
+	sourcefile, err := os.Open(source)
 	if err != nil {
-		fmt.Printf("filepath.Walk() returned %v\n", err)
+		return err
 	}
+
+	defer sourcefile.Close()
+
+	destfile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+
+	defer destfile.Close()
+
+	_, err = io.Copy(destfile, sourcefile)
+	if err == nil {
+		sourceinfo, err := os.Stat(source)
+		if err != nil {
+			err = os.Chmod(dest, sourceinfo.Mode())
+		}
+
+	}
+
+	return
+}
+
+func CopyDir(source string, dest string) (err error) {
+
+	// get properties of source dir
+	sourceinfo, err := os.Stat(source)
+	if err != nil {
+		return err
+	}
+
+	// create dest dir
+
+	err = os.MkdirAll(dest, sourceinfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	directory, _ := os.Open(source)
+
+	objects, err := directory.Readdir(-1)
+
+	for _, obj := range objects {
+
+		sourcefilepointer := source + "/" + obj.Name()
+
+		destinationfilepointer := dest + "/" + obj.Name()
+
+		if obj.IsDir() {
+			// create sub-directories - recursively
+			err = CopyDir(sourcefilepointer, destinationfilepointer)
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			// perform copy
+			err = CopyFile(sourcefilepointer, destinationfilepointer)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
+	}
+	return
 }
 
 func UploadServer(w http.ResponseWriter, r *http.Request) {
