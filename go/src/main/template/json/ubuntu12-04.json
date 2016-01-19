@@ -14,15 +14,22 @@
             "iso_url":"ISO_URL",
             "iso_checksum": "ISO_CHECKSUM",
             "iso_checksum_type": "md5",
+	    "output_directory": "OUTPUT_DIRECTORY",
             "http_directory": "http",
             "ssh_username": "{{user `user`}}",
             "ssh_password": "{{user `password`}}",
             "ssh_wait_timeout": "90m",
-            "shutdown_command": "echo '{{user `password`}}'|sudo -S passwd -e '{{user `user`}}' && shutdown -P now",
+            "shutdown_command": "echo '{{user `password`}}'|sudo -S shutdown -P now",
+            "qemuargs": [
+               [ "-m", "2048M" ]
+             ],
             "boot_wait": "2s",
+            "floppy_files": [
+                "FLOPPY_CFG"
+            ],  
             "boot_command": [
                 "<esc><esc><enter><wait>",
-                "/install/vmlinuz url=KS ",
+                "/install/vmlinuz preseed/file=KS_CFG ",
                 "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
                 "hostname=ubuntu12043 ",
                 "keyboard-configuration/modelcode=SKIP ",
@@ -36,4 +43,3 @@
             ]
         }
     ]
-}

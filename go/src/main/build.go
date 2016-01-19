@@ -185,7 +185,11 @@ func buildjson(r *http.Request) (timest string) {
 	cfg := dat["cfgmap"][r.Form.Get("ostype")]
 	reportlog[timest]["newcfg"] = reportlog[timest]["resultdir"] + "cfg/" + cfg[strings.LastIndex(cfg, "/")+1:]
 	//reportlog[timest]["newcfgs"] = "https://" + dat["servermap"]["server"] + "/" + reportlog[timest]["newcfg"]
-	reportlog[timest]["newcfgs"] = reportlog[timest]["newcfg"]
+	if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS"); index >= 0 {
+		reportlog[timest]["newcfgs"] = "floppy:/" + reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
+	} else if index := strings.LastIndex(r.Form.Get("ostype"), "Ubuntu"); index >= 0 {
+		reportlog[timest]["newcfgs"] = "/floppy/" + reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
+	}
 	reportlog[timest]["iso"] = dat["isomap"][r.Form.Get("ostype")]
 	disksizen, _ := strconv.Atoi(r.Form.Get("disksize"))
 	disksizens := strconv.Itoa(disksizen * 1024)
@@ -200,6 +204,7 @@ func buildjson(r *http.Request) (timest string) {
 	line = strings.Replace(line, "OUTPUT_DIRECTORY", reportlog[timest]["resultdir"]+"output/", -1)
 	line = strings.Replace(line, "ISO_CHECKSUM", dat["md5map"][dat["isomap"][r.Form.Get("ostype")]], -1)
 	line = strings.Replace(line, "ISO_URL", reportlog[timest]["iso"], -1)
+	line = strings.Replace(line, "FLOPPY_CFG", reportlog[timest]["newcfg"], -1)
 	line = strings.Replace(line, "KS_CFG", reportlog[timest]["newcfgs"], -1)
 	line = strings.Replace(line, "WIN_CFG", reportlog[timest]["newcfg"], -1)
 	line = strings.Replace(line, "RESULTDIR", reportlog[timest]["resultdir"], -1)
