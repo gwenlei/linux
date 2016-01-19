@@ -29,11 +29,14 @@
         ["-m","768"]
       ],
       "boot_wait": "5s",
+      "floppy_files": [
+          "FLOPPY_CFG"
+      ],  
       "boot_command":
       [
        "<esc><enter><wait>",
-       "linux netsetup=dhcp lang=en_US hostname=build netdevice=eth0",
-       " autoyast=KS_CFG ",
+       "linux autoyast=floppy ",
+       "netsetup=dhcp lang=en_US hostname=build netdevice=eth0",
        " textmode=1 insecure=1<wait><enter><wait>"
       ]
     }
