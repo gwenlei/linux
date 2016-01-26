@@ -3,6 +3,15 @@
         "user": "SSH_USERNAME",
         "password": "SSH_PASSWORD"
     },
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo 'SSH_PASSWORD' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+          "scripts": [
+            "template/script/bash.sh"SCRIPTFILES
+          ]
+    }
+  ],
     "builders":
     [
         {
@@ -20,11 +29,17 @@
             "ssh_username": "{{user `user`}}",
             "ssh_password": "{{user `password`}}",
             "ssh_wait_timeout": "90m",
-            "shutdown_command": "echo '{{user `password`}}'|sudo -S passwd -e '{{user `user`}}' && sudo -S shutdown -P now",
+            "shutdown_command": "echo '{{user `password`}}'|sudo -S shutdown -P now",
+	    "qemuargs": [
+	       [ "-m", "2048M" ]
+	     ],
             "boot_wait": "2s",
+            "floppy_files": [
+                "FLOPPY_CFG"
+            ],  
             "boot_command": [
                 "<esc><esc><enter><wait>",
-                "/install/vmlinuz url=KS ",
+                "/install/vmlinuz preseed/file=KS_CFG ",
                 "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
                 "hostname=ubuntu1404 ",
                 "keyboard-configuration/modelcode=SKIP ",

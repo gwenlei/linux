@@ -161,6 +161,9 @@ func buildjson(r *http.Request) (timest string) {
 	for _, v := range r.Form["software"] {
 		reportlog[timest]["software"] = reportlog[timest]["software"] + v + "\n"
 	}
+        for _, v := range r.Form["type"] {
+		reportlog[timest]["type"] = reportlog[timest]["type"] + v + "\n"
+	}
 	liner, _ := json.Marshal(reportlog)
 	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
 
@@ -213,12 +216,13 @@ func buildjson(r *http.Request) (timest string) {
 	n := copy(script, r.Form["software"])
 	copy(newscript, script)
 	fmt.Println("n=", n)
+        var scriptfiles string
 	if n > 0 {
-		var scriptfiles string
+		
 		for k, v := range script {
 			fmt.Println(k, v)
 			newscript[k] = reportlog[timest]["resultdir"] + "script/" + v[strings.LastIndex(v, "/")+1:]
-			scriptfiles = scriptfiles + "\"" + newscript[k] + "\""
+			scriptfiles = scriptfiles + ",\"" + newscript[k] + "\""
 			n = n - 1
 			// copy script
 			newscriptf, _ := os.Create(newscript[k])
@@ -226,19 +230,10 @@ func buildjson(r *http.Request) (timest string) {
 			io.Copy(newscriptf, scriptf)
 			defer scriptf.Close()
 			defer newscriptf.Close()
-
-			if n == 0 {
-				break
-			}
-			scriptfiles = scriptfiles + ",\n"
 		}
 		fmt.Println("scriptfiles=", scriptfiles)
-		buf, _ := ioutil.ReadFile("template/json/provisioners.json")
-		line = line + ",\n" + string(buf)
-		line = strings.Replace(line, "SCRIPTFILES", scriptfiles, -1)
-		line = strings.Replace(line, "SSH_PASSWORD", r.Form.Get("password"), -1)
 	}
-	line = line + "}"
+        line = strings.Replace(line, "SCRIPTFILES", scriptfiles, -1)
 	ioutil.WriteFile(reportlog[timest]["newjson"], []byte(line), 0)
 
 	// new cfg file part
@@ -316,7 +311,7 @@ func callpacker(timest string) *os.Process {
 		//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
 		Files: []*os.File{inf, outf, errf},
 	}
-	p, err := os.StartProcess("/home/packerdir/packer", []string{"/home/packerdir/packer", "build", reportlog[timest]["newjson"]}, attr)
+        p, err := os.StartProcess("/home/packerdir/packer", []string{"/home/packerdir/packer", "build",reportlog[timest]["newjson"]}, attr)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

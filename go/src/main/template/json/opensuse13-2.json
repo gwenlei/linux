@@ -1,4 +1,13 @@
 {
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo 'SSH_PASSWORD' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+          "scripts": [
+            "template/script/bash.sh"SCRIPTFILES
+          ]
+    }
+  ],
   "builders":
   [
     {
@@ -41,5 +50,5 @@
       ]
     }
   ]
-
+}
 

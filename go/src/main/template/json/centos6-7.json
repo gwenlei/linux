@@ -1,4 +1,13 @@
 {
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo 'SSH_PASSWORD' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+          "scripts": [
+            "template/script/bash.sh"SCRIPTFILES
+          ]
+    }
+  ],
   "builders":
   [
     {
@@ -29,9 +38,13 @@
          [ "-m", "1024M" ]
       ],
       "boot_wait": "5s",
+      "floppy_files": [
+          "FLOPPY_CFG"
+      ],
       "boot_command":
       [
         "<tab> text ks=KS_CFG<enter><wait>"
       ]
     }
   ]
+}

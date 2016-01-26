@@ -1,4 +1,13 @@
 {
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo 'SSH_PASSWORD' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+          "scripts": [
+            "template/script/bash.sh"SCRIPTFILES
+          ]
+    }
+  ],
   "builders":
   [
     {
@@ -28,6 +37,9 @@
       "qemuargs": [
          [ "-m", "1024M" ]
       ],
+      "floppy_files": [
+          "FLOPPY_CFG"
+      ],
       "boot_wait": "5s",
       "boot_command":
       [
@@ -35,3 +47,4 @@
       ]
     }
   ]
+}

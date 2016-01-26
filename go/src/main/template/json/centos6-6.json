@@ -1,4 +1,13 @@
 {
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo 'SSH_PASSWORD' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+          "scripts": [
+            "template/script/bash.sh"SCRIPTFILES
+          ]
+    }
+  ],
   "builders":
   [
     {
@@ -30,11 +39,12 @@
       ],
       "boot_wait": "5s",
       "floppy_files": [
-          "KS_CFG"
+          "FLOPPY_CFG"
       ],
       "boot_command":
       [
-        "<tab> text ks=floppy:/centos6-6.cfg --noverifyssl <enter><wait>"
+        "<tab> text ks=KS_CFG <enter><wait>"
       ]
     }
   ]
+}

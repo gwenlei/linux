@@ -3,6 +3,15 @@
         "password": "SSH_PASSWORD",
         "disk_size": "DISK_SIZE"
     },
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo 'SSH_PASSWORD' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+          "scripts": [
+            "template/script/bash.sh"SCRIPTFILES
+          ]
+    }
+  ],
     "builders": [
         {
 	    "vm_name":"VM_NAME",
@@ -30,3 +39,4 @@
 
         }
     ]
+}
