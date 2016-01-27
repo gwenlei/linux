@@ -27,7 +27,7 @@
             "ssh_password": "{{user `password`}}",
             "ssh_wait_timeout": "90m",
             "shutdown_command": "echo '{{user `password`}}'|sudo -S shutdown -P now",
-            "boot_wait": "2s",
+            "boot_wait": "5s",
             "floppy_files": [
                 "FLOPPY_CFG"
             ],  
