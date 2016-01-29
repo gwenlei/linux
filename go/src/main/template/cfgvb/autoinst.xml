@@ -87,32 +87,30 @@ PARTITIONS
       <package>glibc-locale</package>
       <package>iputils</package>
       <package>kernel-default</package>
-      <package>less</package>
-      <package>vim</package>
+      <package>kernel-default-devel</package>
+      <package>gcc</package>
+      <package>make</package>
       <package>sudo</package>
-      <package>screen</package>
       <package>yast2</package>
       <package>yast2-firstboot</package>
       <package>zypper</package>
-      <package>open-vm-tools</package>
       <package>yast2-trans-en_US</package>
       <package>wget</package>
       <package>curl</package>
-      <package>iproute2</package>
-      <package>openssh</package>
-      <package>e2fsprogs</package>
-      <package>acpid</package>
+      <package>grub2-branding-openSUSE</package>
     </packages>
-    <do_online_update config:type="boolean">true</do_online_update>
+    <do_online_update config:type="boolean">false</do_online_update>
     <instsource>http://mirror.yandex.ru/opensuse/distribution/13.2/repo/oss/</instsource>
     <patterns config:type="list">
-      <pattern>base</pattern>
       <pattern>sw_management</pattern>
       <pattern>yast2_install_wf</pattern>
+      <pattern>minimal_base</pattern>
     </patterns>
     <remove-packages config:type="list">
       <package>bash-completion</package>
       <package>telnet</package>
+      <package>virtualbox-guest-kmp-default</package>
+      <package>virtualbox-guest-tools</package>
     </remove-packages>
   </software>
   <services-manager>
@@ -152,4 +150,21 @@ PARTITIONS
   <kdump>
     <add_crash_kernel config:type="boolean">false</add_crash_kernel>
   </kdump>
+
+    <scripts>
+    <init-scripts config:type="list">
+    <script>
+    <filename>instkernel.sh</filename>
+    <debug config:type="boolean">true</debug>
+    <location></location>
+    <interpreter>shell</interpreter>
+    <source><![CDATA[
+    #!/bin/bash
+    ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
+    reboot
+    ]]>
+    </source>
+    </script>
+    </init-scripts>
+    </scripts>
 </profile>
