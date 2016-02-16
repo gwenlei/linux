@@ -187,7 +187,9 @@ func buildjson(r *http.Request) (timest string) {
 	cfg := dat["cfgmap"][r.Form.Get("ostype")]
 	reportlog[timest]["newcfg"] = reportlog[timest]["resultdir"] + "cfg/" + cfg[strings.LastIndex(cfg, "/")+1:]
 	//reportlog[timest]["newcfgs"] = "https://" + dat["servermap"]["server"] + "/" + reportlog[timest]["newcfg"]
-	if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS"); index >= 0 {
+	if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS7.1"); index >= 0 {
+		reportlog[timest]["newcfgs"] = reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
+	} else if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS"); index >= 0 {
 		reportlog[timest]["newcfgs"] = "floppy:/" + reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
 	} else if index := strings.LastIndex(r.Form.Get("ostype"), "Ubuntu"); index >= 0 {
 		reportlog[timest]["newcfgs"] = "/floppy/" + reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
@@ -210,6 +212,7 @@ func buildjson(r *http.Request) (timest string) {
 	line = strings.Replace(line, "KS_CFG", reportlog[timest]["newcfgs"], -1)
 	line = strings.Replace(line, "WIN_CFG", reportlog[timest]["newcfg"], -1)
 	line = strings.Replace(line, "FLOPPYDIR", reportlog[timest]["resultdir"]+dat["floppymap"][r.Form.Get("ostype")][strings.LastIndex(dat["floppymap"][r.Form.Get("ostype")], "/")+1:], -1)
+        line = strings.Replace(line, "CFGDIR", reportlog[timest]["resultdir"]+"cfg", -1)
 	line = strings.Replace(line, "HEADLESS", r.Form.Get("headless"), -1)
 	var script = make([]string, 10)
 	var newscript = make([]string, 10)
@@ -230,6 +233,9 @@ func buildjson(r *http.Request) (timest string) {
 			io.Copy(newscriptf, scriptf)
 			defer scriptf.Close()
 			defer newscriptf.Close()
+                        if n==0 {
+                           break
+                        }
 		}
 		fmt.Println("scriptfiles=", scriptfiles)
 	}
@@ -311,7 +317,7 @@ func callpacker(timest string) *os.Process {
 		//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
 		Files: []*os.File{inf, outf, errf},
 	}
-        p, err := os.StartProcess("/home/packerdir/packer", []string{"/home/packerdir/packer", "build",reportlog[timest]["newjson"]}, attr)
+        p, err := os.StartProcess(dat["servermap"]["packer"], []string{dat["servermap"]["packer"], "build",reportlog[timest]["newjson"]}, attr)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
