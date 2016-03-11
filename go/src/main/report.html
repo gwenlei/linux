@@ -19,7 +19,7 @@ $(document).ready(function(){
                                         $("#reportb").append("<td>"+field.status+"</td>");
                                         $("#reportb").append("<td><a href=\""+field.resultdir+"packer.log\">log</a></td>");
                                         if(field.buildtype=="xenserver"){
-                                        $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+"\">"+field.outputdir+field.vmname+".vhd</a></td>");}
+                                        $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+".vhd\">"+field.outputdir+field.vmname+".vhd</a></td>");}
                                         else{
                                         $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+"\">"+field.outputdir+field.vmname+"</a></td>");}
                                         $("#reportb").append("<td>"+parseInt(field.packertime/60)+"m"+field.packertime%60+"s</td>");
