@@ -343,7 +343,18 @@ func calltransform(p *os.Process, timest string) {
            fmt.Printf("compat:No\n")
            return
          }
-	if reportlog[timest]["status"] == "packer success"  {
+        for {
+          if reportlog[timest]["status"] == "packer failed" { 
+             fmt.Printf("compat:packer failed\n")
+             return
+          }else if reportlog[timest]["status"] == "packer success" { 
+             break
+          }else{
+             fmt.Printf("compat sleep 2m\n")
+             time.Sleep(120*time.Second)
+          }
+        }
+
 		fmt.Println("calltransform")
 		inf, _ := os.Create(reportlog[timest]["resultdir"] + "inf2.log")
 		outf, _ := os.Create(reportlog[timest]["resultdir"] + "convert.log")
@@ -363,7 +374,7 @@ func calltransform(p *os.Process, timest string) {
 		fmt.Println("p2=[", p2, "]")
 		reportlog[timest]["transformpid"] = strconv.Itoa(p2.Pid)
 		go checkstatus(p2, "transform", timest)
-	}
+
 }
 
 func callbzip2(timest string) {
@@ -372,7 +383,13 @@ func callbzip2(timest string) {
           return
         }
         for {
-          if reportlog[timest]["compat"] == "0.1" && reportlog[timest]["status"] == "transform success" { break
+          if reportlog[timest]["status"] == "packer failed" { 
+             fmt.Printf("compat:packer failed\n")
+             return
+          }else if reportlog[timest]["status"] == "transform failed" { 
+             fmt.Printf("compat:transform failed\n")
+             return
+          }else if reportlog[timest]["compat"] == "0.1" && reportlog[timest]["status"] == "transform success" { break
           }else if reportlog[timest]["compat"] != "0.1" && reportlog[timest]["status"] == "packer success" {
                break
           }else{
