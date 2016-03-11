@@ -18,9 +18,13 @@ $(document).ready(function(){
                                         document.getElementById("reportb").appendChild(parttext1);
                                         $("#reportb").append("<td>"+field.status+"</td>");
                                         $("#reportb").append("<td><a href=\""+field.resultdir+"packer.log\">log</a></td>");
-                                        $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+"\">"+field.outputdir+field.vmname+"</a></td>");
+                                        if(field.buildtype=="xenserver"){
+                                        $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+"\">"+field.outputdir+field.vmname+".vhd</a></td>");}
+                                        else{
+                                        $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+"\">"+field.outputdir+field.vmname+"</a></td>");}
                                         $("#reportb").append("<td>"+parseInt(field.packertime/60)+"m"+field.packertime%60+"s</td>");
                                         $("#reportb").append("<td>"+field.timestamp+"</td>");
+                                        $("#reportb").append("<td>"+field.buildtype+"</td>");
                                         $("#reportb").append("<td>"+field.ostype+"</td>");
                                         $("#reportb").append("<td>"+field.vmname+"</td>");
                                         $("#reportb").append("<td>"+field.user+"</td>");
@@ -28,6 +32,7 @@ $(document).ready(function(){
                                         $("#reportb").append("<td>"+field.disksize+"</td>");
                                         $("#reportb").append("<td>"+field.part+"</td>");
                                         $("#reportb").append("<td>"+field.software+"</td>");
+                                        $("#reportb").append("<td>"+field.headless+"</td>");
                                         $("#reportb").append("<td>"+field.compat+"</td>");
                                         $("#reportb").append("</tr>");
 				});
@@ -48,6 +53,7 @@ $(document).ready(function(){
                         <th>outputdir</th>
 			<th>packertime</th>
 			<th>timestamp</th>
+			<th>buildtype</th>
 			<th>ostype</th>
 			<th>vmname</th>
 			<th>user</th>
@@ -55,6 +61,7 @@ $(document).ready(function(){
 			<th>disksize</th>
 			<th>partition</th>
                         <th>software</th>
+                        <th>headless</th>
                         <th>compat</th>
 		</tr>
 	</thead>

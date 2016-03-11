@@ -24,7 +24,11 @@ $(document).ready(function(){
 });
 function changeset(x)
 {
+if(document.getElementById("buildtype").value=="qemu"){
 document.getElementById("vmname").value=(document.getElementById(x).value).replace(/\./g, "-")+".qcow2";
+}else {
+document.getElementById("vmname").value=(document.getElementById(x).value).replace(/\./g, "-");
+}
 if((document.getElementById(x).value).indexOf("CentOS")>=0 || (document.getElementById(x).value).indexOf("OpenSuse")>=0){
   document.getElementById("user").value="root";
   document.getElementById("part").value="/";
@@ -75,6 +79,15 @@ document.getElementById(label1.id).appendChild(parttext1);
 label1.innerHTML=label1.innerHTML+field;
 divnum=divnum+1;
 }
+function changename(type)
+{
+if(type=="qemu"){
+document.getElementById("vmname").value=(document.getElementById("ostype").value).replace(/\./g, "-")+".qcow2";
+}
+if(type=="xenserver"){
+document.getElementById("vmname").value=(document.getElementById("ostype").value).replace(/\./g, "-");
+}
+}
 </script>
 </head>
 <body>
@@ -83,6 +96,19 @@ divnum=divnum+1;
 	<div class="row">
 		<div class="col-md-4">
 			<form class="form-horizontal"  action="/build" method="post">
+
+				<div class="form-group">
+					<label for="buildtype" class="col-sm-2 control-label">Buildtype</label>
+					<div class="col-sm-10">
+						<select class="form-control"  id="buildtype" name="buildtype" onchange="changename(this.value)">
+                                                <option value="qemu">qemu</option>
+                                                <option value="xenserver">xenserver</option>
+						</select>
+					</div>
+				</div>
+
+
+
 				<div class="form-group">
 					<label for="ostype" class="col-sm-2 control-label">Ostype</label>
 					<div class="col-sm-10">
@@ -141,11 +167,18 @@ divnum=divnum+1;
 				<div class="form-group">
 					<label for="headless" class="col-sm-2 control-label">Headless</label>
 					<div class="col-sm-offset-2 col-sm-10">
-						<div class="checkbox">
-							<label>
-								<input type="checkbox" name="headless" value="false" checked> false
-							</label>
-						</div>
+
+<div class="radio">
+   <label>
+      <input type="radio" name="headless" id="optionsRadios1" 
+         value="false" checked>false
+   </label>
+   <label>
+      <input type="radio" name="headless" id="optionsRadios2" 
+         value="true">
+         true
+   </label>
+</div>
 					</div>
 				</div>
 				<div class="form-group">

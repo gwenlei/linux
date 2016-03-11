@@ -147,12 +147,14 @@ func buildjson(r *http.Request) (timest string) {
 	reportlog[timest] = make(map[string]string)
 	reportlog[timest]["resultdir"] = dat["resultmap"]["resultdir"] + timest + "/"
 	reportlog[timest]["timestamp"] = timest
+        reportlog[timest]["buildtype"] = r.Form.Get("buildtype")
 	reportlog[timest]["ostype"] = r.Form.Get("ostype")
 	reportlog[timest]["vmname"] = r.Form.Get("vmname")
 	reportlog[timest]["user"] = r.Form.Get("user")
 	reportlog[timest]["password"] = r.Form.Get("password")
 	reportlog[timest]["disksize"] = r.Form.Get("disksize")
-	reportlog[timest]["compat"] = r.Form.Get("compat")
+        reportlog[timest]["compat"] = r.Form.Get("compat")
+	reportlog[timest]["headless"] = r.Form.Get("headless")
 	reportlog[timest]["outputdir"] = reportlog[timest]["resultdir"] + "output/"
 	reportlog[timest]["status"] = "waiting"
 	for k, v := range r.Form["part"] {
@@ -160,9 +162,6 @@ func buildjson(r *http.Request) (timest string) {
 	}
 	for _, v := range r.Form["software"] {
 		reportlog[timest]["software"] = reportlog[timest]["software"] + v + "\n"
-	}
-        for _, v := range r.Form["type"] {
-		reportlog[timest]["type"] = reportlog[timest]["type"] + v + "\n"
 	}
 	liner, _ := json.Marshal(reportlog)
 	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
@@ -214,6 +213,7 @@ func buildjson(r *http.Request) (timest string) {
 	line = strings.Replace(line, "FLOPPYDIR", reportlog[timest]["resultdir"]+dat["floppymap"][r.Form.Get("ostype")][strings.LastIndex(dat["floppymap"][r.Form.Get("ostype")], "/")+1:], -1)
         line = strings.Replace(line, "CFGDIR", reportlog[timest]["resultdir"]+"cfg", -1)
 	line = strings.Replace(line, "HEADLESS", r.Form.Get("headless"), -1)
+        line = strings.Replace(line, "VHDDIR", reportlog[timest]["resultdir"]+"vhd/", -1)
 	var script = make([]string, 10)
 	var newscript = make([]string, 10)
 	n := copy(script, r.Form["software"])
