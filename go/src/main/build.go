@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+        "bytes"
 )
 
 var dat map[string](map[string]string)
@@ -111,6 +112,7 @@ func build(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("buildjson end", timest)
 		p := callpacker(timest)
 		go calltransform(p, timest)
+                go callbzip2(timest)
 		http.Redirect(w, r, "/build", 302)
 	}
 }
@@ -155,8 +157,18 @@ func buildjson(r *http.Request) (timest string) {
 	reportlog[timest]["disksize"] = r.Form.Get("disksize")
         reportlog[timest]["compat"] = r.Form.Get("compat")
 	reportlog[timest]["headless"] = r.Form.Get("headless")
+        reportlog[timest]["bzip2"] = r.Form.Get("bzip2")
 	reportlog[timest]["outputdir"] = reportlog[timest]["resultdir"] + "output/"
 	reportlog[timest]["status"] = "waiting"
+        if reportlog[timest]["buildtype"]=="qemu" {
+           reportlog[timest]["downloadlink"]=reportlog[timest]["outputdir"]+reportlog[timest]["vmname"]
+        }else{
+           reportlog[timest]["downloadlink"]=reportlog[timest]["outputdir"]+reportlog[timest]["vmname"]+".vhd"
+        }
+        if reportlog[timest]["bzip2"]=="Yes" {
+           reportlog[timest]["downloadlink"]=reportlog[timest]["downloadlink"]+".bz2"
+        }
+        fmt.Println("downloadlink=", reportlog[timest]["downloadlink"])
 	for k, v := range r.Form["part"] {
 		reportlog[timest]["part"] = reportlog[timest]["part"] + v + ":" + r.Form["size"][k] + " "
 	}
@@ -323,10 +335,15 @@ func callpacker(timest string) *os.Process {
 	}
 	fmt.Println("p=[", p, "]")
 	reportlog[timest]["packerpid"] = strconv.Itoa(p.Pid)
+        go checkstatus(p, "packer", timest)
 	return p
 }
 func calltransform(p *os.Process, timest string) {
-	if checkstatus(p, "packer", timest) == true && reportlog[timest]["compat"] == "0.1" {
+        if reportlog[timest]["compat"] != "0.1" {
+           fmt.Printf("compat:No\n")
+           return
+         }
+	if reportlog[timest]["status"] == "packer success"  {
 		fmt.Println("calltransform")
 		inf, _ := os.Create(reportlog[timest]["resultdir"] + "inf2.log")
 		outf, _ := os.Create(reportlog[timest]["resultdir"] + "convert.log")
@@ -347,6 +364,44 @@ func calltransform(p *os.Process, timest string) {
 		reportlog[timest]["transformpid"] = strconv.Itoa(p2.Pid)
 		go checkstatus(p2, "transform", timest)
 	}
+}
+
+func callbzip2(timest string) {
+        if reportlog[timest]["bzip2"]!="Yes" {
+          fmt.Printf("bzip2:No\n")
+          return
+        }
+        for {
+          if reportlog[timest]["compat"] == "0.1" && reportlog[timest]["status"] == "transform success" { break
+          }else if reportlog[timest]["compat"] != "0.1" && reportlog[timest]["status"] == "packer success" {
+               break
+          }else{
+             fmt.Printf("bzip2 sleep 2m\n")
+             time.Sleep(120*time.Second)
+          }
+        }
+        var vmstr string
+        if reportlog[timest]["buildtype"]=="qemu"{
+           vmstr=reportlog[timest]["outputdir"]+reportlog[timest]["vmname"]
+        }else{
+        vmstr=reportlog[timest]["outputdir"]+reportlog[timest]["vmname"]+".vhd"
+        }
+        fmt.Printf("bzip2:"+vmstr+"\n")
+        reportlog[timest]["status"] = "bzip2 running"
+        liner, _ := json.Marshal(reportlog)
+	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
+        cmd := exec.Command("bzip2", "-z", vmstr)
+        cmd.Stdin = strings.NewReader("some input")
+        var out bytes.Buffer
+        cmd.Stdout = &out
+        err := cmd.Run()
+        if err != nil {
+                log.Fatal(err)
+        }
+        fmt.Printf("bzip2 end:"+vmstr+"\n")
+        reportlog[timest]["status"] = "bzip2 success"
+        liner, _ = json.Marshal(reportlog)
+	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
 }
 func checkstatus(p *os.Process, pname string, timest string) bool {
 	fmt.Println("checkstatus", pname, p)
