@@ -18,10 +18,8 @@ $(document).ready(function(){
                                         document.getElementById("reportb").appendChild(parttext1);
                                         $("#reportb").append("<td>"+field.status+"</td>");
                                         $("#reportb").append("<td><a href=\""+field.resultdir+"packer.log\">log</a></td>");
-                                        if(field.buildtype=="xenserver"){
-                                        $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+".vhd\">"+field.outputdir+field.vmname+".vhd</a></td>");}
-                                        else{
-                                        $("#reportb").append("<td><a href=\""+field.outputdir+field.vmname+"\">"+field.outputdir+field.vmname+"</a></td>");}
+                                        
+                                        $("#reportb").append("<td><a href=\""+field.downloadlink+"\">"+field.downloadlink+"</a></td>");
                                         $("#reportb").append("<td>"+parseInt(field.packertime/60)+"m"+field.packertime%60+"s</td>");
                                         $("#reportb").append("<td>"+field.timestamp+"</td>");
                                         $("#reportb").append("<td>"+field.buildtype+"</td>");
@@ -34,6 +32,8 @@ $(document).ready(function(){
                                         $("#reportb").append("<td>"+field.software+"</td>");
                                         $("#reportb").append("<td>"+field.headless+"</td>");
                                         $("#reportb").append("<td>"+field.compat+"</td>");
+                                        $("#reportb").append("<td>"+field.bzip2+"</td>");
+                                        $("#reportb").append("<td>"+field.settingfile+"</td>");
                                         $("#reportb").append("</tr>");
 				});
 		});
@@ -63,6 +63,8 @@ $(document).ready(function(){
                         <th>software</th>
                         <th>headless</th>
                         <th>compat</th>
+                        <th>bzip2</th>
+                        <th>settingfile</th>
 		</tr>
 	</thead>
 	<tbody id="reportb">

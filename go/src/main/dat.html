@@ -9,6 +9,7 @@
 <script type="text/javascript" src="/static/js/test2.js"></script>
 <script type="text/javascript">
 divnum=1;
+filename="/static/data/data.json";
 function adddiv(divp,id,field)
 {
 var partdiv=document.createElement("div");
@@ -64,7 +65,7 @@ function deletediv(obj){
     my.parentNode.removeChild(my);}  
 }
 $(document).ready(function(){
-			$.getJSON("/static/data/data.json",function(result){
+			$.getJSON(filename,function(result){
                                 $.each(result.jsonmap, function(i, field){
                                         adddiv("jsonmap",i,field)
 					});
@@ -86,9 +87,49 @@ $(document).ready(function(){
                                 $.each(result.servermap, function(i, field){
                                         adddiv("servermap",i,field)
 					});
-				});
+                                $.each(result.floppymap, function(i, field){
+                                        adddiv("floppymap",i,field)
+					});
+ 				});
 
 		});
+function changefile(name)
+{
+filename=name;
+var divs= new Array("jsonmap","cfgmap","isomap","md5map","scriptmap","resultmap","servermap","floppymap");
+for(var key in divs){
+    while (document.getElementById(divs[key]).hasChildNodes())
+    {
+      document.getElementById(divs[key]).removeChild(document.getElementById(divs[key]).firstChild);
+    }
+}
+			$.getJSON(filename,function(result){
+                                $.each(result.jsonmap, function(i, field){
+                                        adddiv("jsonmap",i,field)
+					});
+                                $.each(result.cfgmap, function(i, field){
+                                        adddiv("cfgmap",i,field)
+					});
+                                $.each(result.isomap, function(i, field){
+                                        adddiv("isomap",i,field)
+					});
+                                $.each(result.md5map, function(i, field){
+                                        adddiv("md5map",i,field)
+					});
+                                $.each(result.scriptmap, function(i, field){
+                                        adddiv("scriptmap",i,field)
+					});
+                                $.each(result.resultmap, function(i, field){
+                                        adddiv("resultmap",i,field)
+					});
+                                $.each(result.servermap, function(i, field){
+                                        adddiv("servermap",i,field)
+					});
+                                $.each(result.floppymap, function(i, field){
+                                        adddiv("floppymap",i,field)
+					});
+ 				});
+}
 </script>
 </head>
 
@@ -98,48 +139,90 @@ $(document).ready(function(){
 	<div class="row">
 		<div class="col-md-4">
                       <form class="form-horizontal"  id="form1" name="form1" action="/setdat" method="post">
-                      <div id="jsonmap" class="form-group" >
+
+
+				<div class="form-group">
+					<label for="filename" class="col-sm-2 control-label">Settingfile</label>
+					<div class="col-sm-8">
+						<input type="text" class="form-control" id="settingfile" name="settingfile" value="static/data/data.json">
+                                                
+					</div>
+
+					<div class="col-sm-2">
+						<button type="button" class="btn btn-default" onclick="changefile(settingfile.value)">loadfile</button>
+					</div>
+				</div>
+
+                      <div id="jsonmapb" class="form-group" >
 					<div class="col-sm-12">
                                                 <label for="jsonmapb" class="control-label">jsonmap</label>
 						<button type="button" class="btn btn-default" id="jsonmapb" onclick="adddiv('jsonmap','newid','newvalue')">add</button>
 					</div>
 		      </div>
-                      <div id="cfgmap" class="form-group" >
+                      <div id="jsonmap" class="form-group" >
+		      </div>
+
+                      <div id="cfgmapb" class="form-group" >
 					<div class="col-sm-12">
                                                 <label for="cfgmapb" class="control-label">cfgmap</label>
 						<button type="button" class="btn btn-default" id="cfgmapb" onclick="adddiv('cfgmap','newid','newvalue')">add</button>
 					</div>
 		      </div>
-                      <div id="isomap" class="form-group" >
+                      <div id="cfgmap" class="form-group" >
+		      </div>
+
+
+                      <div id="isomapb" class="form-group" >
 					<div class="col-sm-12">
                                                 <label for="isomapb" class="control-label">isomap</label>
 						<button type="button" class="btn btn-default" id="isomapb" onclick="adddiv('isomap','newid','newvalue')">add</button>
 					</div>
 		      </div>
+                      <div id="isomap" class="form-group" >
+		      </div>
+
                       <div id="md5map" class="form-group" >
 					<div class="col-sm-12">
                                                 <label for="md5mapb" class="control-label">md5map</label>
 						<button type="button" class="btn btn-default" id="md5mapb" onclick="adddiv('md5map','newid','newvalue')">add</button>
 					</div>
 		      </div>
-                      <div id="scriptmap" class="form-group" >
+                      <div id="scriptmapb" class="form-group" >
 					<div class="col-sm-12">
                                                 <label for="scriptmapb" class="control-label">scriptmap</label>
 						<button type="button" class="btn btn-default" id="scriptmapb" onclick="adddiv('scriptmap','newid','newvalue')">add</button>
 					</div>
 		      </div>
-                      <div id="resultmap" class="form-group" >
+                      <div id="scriptmap" class="form-group" >
+		      </div>
+
+                      <div id="resultmapb" class="form-group" >
 					<div class="col-sm-12">
                                                 <label for="resultmapb" class="control-label">resultmap</label>
 						<button type="button" class="btn btn-default" id="resultmapb" onclick="adddiv('resultmap','newid','newvalue')">add</button>
 					</div>
 		      </div>
-                      <div id="servermap" class="form-group" >
+                      <div id="resultmap" class="form-group" >
+		      </div>
+
+                      <div id="servermapb" class="form-group" >
 					<div class="col-sm-12">
                                                 <label for="servermapb" class="control-label">servermap</label>
 						<button type="button" class="btn btn-default" id="servermapb" onclick="adddiv('servermap','newid','newvalue')">add</button>
 					</div>
 		      </div>
+                      <div id="servermap" class="form-group" >
+		      </div>
+
+                      <div id="floppymapb" class="form-group" >
+					<div class="col-sm-12">
+                                                <label for="floppymapb" class="control-label">floppymap</label>
+						<button type="button" class="btn btn-default" id="floppymapb" onclick="adddiv('floppymap','newid','newvalue')">add</button>
+					</div>
+		      </div>
+                      <div id="floppymap" class="form-group" >
+		      </div>
+
                       <div class="form-group">
 					<div class="col-sm-10">
 						<button type="submit" class="btn btn-default">Save</button>

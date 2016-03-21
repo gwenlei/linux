@@ -85,13 +85,18 @@ func setdat(w http.ResponseWriter, r *http.Request) {
 				dat[vt][v] = r.Form[vt+"+fieldvalue"][k]
 			}
 		}
-		newdataf, _ := os.Create("static/data/log/data.json" + time.Now().Format("20060102150405"))
-		dataf, _ := os.Open("static/data/data.json")
+                filename:=r.Form.Get("settingfile")
+                backfile:="static/data/log/"+filename[strings.LastIndex(filename, "/")+1:] + time.Now().Format("20060102150405")
+		newdataf, _ := os.Create(backfile)
+                fmt.Println("filename:",filename)
+                fmt.Println("backfile:",backfile)
+		//dataf, _ := os.Open("static/data/data.json")
+                dataf, _ := os.Open(filename)
 		io.Copy(newdataf, dataf)
 		defer newdataf.Close()
 		defer dataf.Close()
 		line, _ := json.Marshal(dat)
-		ioutil.WriteFile("static/data/data.json", line, 0)
+		ioutil.WriteFile(filename, line, 0)
 		http.Redirect(w, r, "/setdat", 302)
 	}
 }
@@ -110,8 +115,8 @@ func build(w http.ResponseWriter, r *http.Request) {
 
 		timest := buildjson(r)
 		fmt.Println("buildjson end", timest)
-		p := callpacker(timest)
-		go calltransform(p, timest)
+		go callpacker(timest)
+		go calltransform(timest)
                 go callbzip2(timest)
 		http.Redirect(w, r, "/build", 302)
 	}
@@ -158,6 +163,7 @@ func buildjson(r *http.Request) (timest string) {
         reportlog[timest]["compat"] = r.Form.Get("compat")
 	reportlog[timest]["headless"] = r.Form.Get("headless")
         reportlog[timest]["bzip2"] = r.Form.Get("bzip2")
+        reportlog[timest]["settingfile"] = r.Form.Get("settingfile")
 	reportlog[timest]["outputdir"] = reportlog[timest]["resultdir"] + "output/"
 	reportlog[timest]["status"] = "waiting"
         if reportlog[timest]["buildtype"]=="qemu" {
@@ -193,6 +199,18 @@ func buildjson(r *http.Request) (timest string) {
 		tmplogs = tmplogs + "\n"
 	}
 	ioutil.WriteFile(tmplog, []byte(tmplogs), 0)
+
+	dat = make(map[string](map[string]string))
+	bufst, _ := ioutil.ReadFile(r.Form.Get("settingfile"))
+	if len(bufst) > 0 {
+		if err := json.Unmarshal(bufst, &dat); err != nil {
+			panic(err)
+		}
+	} else {
+           fmt.Println("settingfile err")
+           os.Exit(1)
+        }       
+
 	json := dat["jsonmap"][r.Form.Get("ostype")]
 	reportlog[timest]["newjson"] = reportlog[timest]["resultdir"] + "json/" + json[strings.LastIndex(json, "/")+1:]
 	cfg := dat["cfgmap"][r.Form.Get("ostype")]
@@ -338,7 +356,7 @@ func callpacker(timest string) *os.Process {
         go checkstatus(p, "packer", timest)
 	return p
 }
-func calltransform(p *os.Process, timest string) {
+func calltransform(timest string) {
         if reportlog[timest]["compat"] != "0.1" {
            fmt.Printf("compat:No\n")
            return
