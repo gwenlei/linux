@@ -83,9 +83,11 @@ function changename(type)
 {
 if(type=="qemu"){
 document.getElementById("vmname").value=(document.getElementById("ostype").value).replace(/\./g, "-")+".qcow2";
+document.getElementById("settingfile").value="static/data/dataqemu.json";
 }
 if(type=="xenserver"){
 document.getElementById("vmname").value=(document.getElementById("ostype").value).replace(/\./g, "-");
+document.getElementById("settingfile").value="static/data/data.json";
 }
 }
 </script>
@@ -101,8 +103,8 @@ document.getElementById("vmname").value=(document.getElementById("ostype").value
 					<label for="buildtype" class="col-sm-2 control-label">Buildtype</label>
 					<div class="col-sm-10">
 						<select class="form-control"  id="buildtype" name="buildtype" onchange="changename(this.value)">
-                                                <option value="qemu">qemu</option>
                                                 <option value="xenserver">xenserver</option>
+                                                <option value="qemu">qemu</option>
 						</select>
 					</div>
 				</div>
@@ -199,11 +201,11 @@ document.getElementById("vmname").value=(document.getElementById("ostype").value
 <div class="radio">
    <label>
       <input type="radio" name="bzip2" id="optionsbzip1" 
-         value="Yes" checked>Yes
+         value="Yes">Yes
    </label>
    <label>
       <input type="radio" name="bzip2" id="optionsbzip2" 
-         value="No">
+         value="No" checked>
          No
    </label>
 </div>

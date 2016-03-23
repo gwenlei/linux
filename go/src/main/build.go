@@ -209,7 +209,10 @@ func buildjson(r *http.Request) (timest string) {
 	} else {
            fmt.Println("settingfile err")
            os.Exit(1)
-        }       
+        }
+        fmt.Println("settingfile:"+reportlog[timest]["settingfile"])
+        fmt.Println("settingfileback:"+reportlog[timest]["resultdir"]+reportlog[timest]["settingfile"][strings.LastIndex(reportlog[timest]["settingfile"], "/")+1:])
+        CopyFile(reportlog[timest]["settingfile"], reportlog[timest]["resultdir"]+reportlog[timest]["settingfile"][strings.LastIndex(reportlog[timest]["settingfile"], "/")+1:])       
 
 	json := dat["jsonmap"][r.Form.Get("ostype")]
 	reportlog[timest]["newjson"] = reportlog[timest]["resultdir"] + "json/" + json[strings.LastIndex(json, "/")+1:]
