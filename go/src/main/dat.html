@@ -9,7 +9,7 @@
 <script type="text/javascript" src="/static/js/test2.js"></script>
 <script type="text/javascript">
 divnum=1;
-filename="/static/data/data.json";
+filename="static/data/dataqemu2xen.json";
 function adddiv(divp,id,field)
 {
 var partdiv=document.createElement("div");
@@ -144,7 +144,7 @@ for(var key in divs){
 				<div class="form-group">
 					<label for="filename" class="col-sm-2 control-label">Settingfile</label>
 					<div class="col-sm-8">
-						<input type="text" class="form-control" id="settingfile" name="settingfile" value="static/data/data.json">
+						<input type="text" class="form-control" id="settingfile" name="settingfile" value="static/data/dataqemu2xen.json">
                                                 
 					</div>
 
@@ -181,12 +181,15 @@ for(var key in divs){
                       <div id="isomap" class="form-group" >
 		      </div>
 
-                      <div id="md5map" class="form-group" >
+                      <div id="md5mapb" class="form-group" >
 					<div class="col-sm-12">
                                                 <label for="md5mapb" class="control-label">md5map</label>
 						<button type="button" class="btn btn-default" id="md5mapb" onclick="adddiv('md5map','newid','newvalue')">add</button>
 					</div>
 		      </div>
+                      <div id="md5map" class="form-group" >
+                      </div>
+
                       <div id="scriptmapb" class="form-group" >
 					<div class="col-sm-12">
                                                 <label for="scriptmapb" class="control-label">scriptmap</label>
