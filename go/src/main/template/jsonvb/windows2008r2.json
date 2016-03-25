@@ -3,17 +3,6 @@
         "password": "SSH_PASSWORD",
         "disk_size": "DISK_SIZE"
     },
-  "provisioners": [{
-    "type": "powershell",
-    "inline": ["iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))"]
-  }, {
-    "type": "powershell",
-    "elevated_user": "SSH_USERNAME",
-    "elevated_password": "SSH_PASSWORD",
-    "inline": [
-      "choco install -y netfx-4.5.2-devpack"
-    ]     
-  }],
     "builders": [
         {
 	    "vm_name":"VM_NAME",

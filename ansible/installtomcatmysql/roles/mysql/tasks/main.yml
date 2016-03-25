@@ -1,2 +1,8 @@
-- name: copy ifcfg-eth0
-  template: src=ifcfg-eth0 dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+  - name: install mysql
+    yum: name={{ item }} state=latest
+    with_items:
+      - mysql-server
+      - mysql
+      - mysql-deve
+  - name: restart mysql
+    service: name=mysqld state=restarted

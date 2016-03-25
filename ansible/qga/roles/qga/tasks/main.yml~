@@ -1,4 +1,0 @@
-    - name: run test script
-      script: files/qgadownload.ps1
-    - name: run test script2
-      script: files/qgaunzip.ps1

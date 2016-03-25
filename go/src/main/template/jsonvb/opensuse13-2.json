@@ -30,7 +30,7 @@
       "ssh_port": 22,
       "ssh_wait_timeout": "90m",
       "vm_name": "VM_NAME",
-      "boot_wait": "5s",
+      "boot_wait": "10s",
       "floppy_files": [
           "FLOPPY_CFG"
       ],  
@@ -38,11 +38,9 @@
       [
        "<esc><enter><wait>",
        "linux autoyast=floppy ",
-       "netsetup=dhcp lang=en_US hostname=build netdevice=eth0",
+       "netsetup=dhcp lang=en_US hostname=build netdevice=eth0 ",
        " textmode=1 insecure=1<wait><enter><wait>"
       ],
-      "guest_additions_path":"/home/img/VBoxGuestAdditions_{{.Version}}.iso",
-      "virtualbox_version_file": ".vbox_version",
       "vboxmanage": [
         [ "modifyvm", "{{.Name}}", "--memory", "2048" ],
         [ "modifyvm", "{{.Name}}", "--cpus", "2" ]

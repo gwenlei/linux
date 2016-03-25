@@ -1,12 +1,11 @@
   - name: clean existing website content
     shell: rm -rf {{webapp}}/test11 && rm -f {{webapp}}/test11.war 
+  - name: ensure tomcat6 is running
+    service: name=tomcat6 state=started
   - name: copy webapp
     copy: src=HelloTomcat/test11.war dest={{webapp}}/ owner=tomcat group=tomcat
-  - name: restart tomcat6
-    service: name=tomcat6 state=restarted
+  - name: sleep for 5 seconds
+    shell: /bin/sleep 5
   - name: copy mysql.properties
     template: src=mysql.properties dest={{webapp}}/test11/WEB-INF/classes/mysql.properties  owner=tomcat group=tomcat mode=0644
-  - name: restart tomcat6
-    service: name=tomcat6 state=restarted
-  - name: restart keepalived
-    service: name=keepalived state=restarted
+    notify: restart tomcat6

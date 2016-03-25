@@ -2,5 +2,3 @@
     template: src=my.cnf dest=/etc/my.cnf
   - name: restart mysqld
     service: name=mysqld state=restarted
-  - name: restart keepalived 
-    service: name=keepalived state=restarted

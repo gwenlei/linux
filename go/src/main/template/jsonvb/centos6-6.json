@@ -42,9 +42,17 @@
       "vboxmanage": [
         [ "modifyvm", "{{.Name}}", "--memory", "2048" ],
         [ "modifyvm", "{{.Name}}", "--cpus", "2" ]
+       ],
       "guest_os_type": "RedHat_64",
       "hard_drive_interface": "sata"
-      ]
+    }
+  ]
+,
+  "post-processors": [
+    {
+      "output": "OUTPUT_DIRECTORYVM_NAME",
+      "type": "vhd",
+      "only": ["virtualbox-iso"]
     }
   ]
 }

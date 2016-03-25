@@ -3,13 +3,13 @@ var place=1;
 function movea(id){
 if(place==1){var op=document.getElementById("build");}
 else if(place==2){var op=document.getElementById("setdat");}
-else if(place==3){var op=document.getElementById("log");}
+else if(place==3){var op=document.getElementById("fileserver");}
 else if(place==4){var op=document.getElementById("report");}
 else if(place==5){var op=document.getElementById("upload");}
 op.className="";
 if(id=="build"){place=1;}
 else if(id=="setdat"){place=2;}
-else if(id=="log"){place=3;}
+else if(id=="fileserver"){place=3;}
 else if(id=="report"){place=4;}
 else if(id=="upload"){place=5;}
 var np=document.getElementById(id);

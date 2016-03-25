@@ -46,7 +46,6 @@
                 "passwd/username={{user `user`}} ",
                 "initrd=/install/initrd.gz -- <enter>"
             ],
-      "guest_additions_path":"/home/img/VBoxGuestAdditions_{{.Version}}.iso",
       "virtualbox_version_file": ".vbox_version",
       "vboxmanage": [
         [ "modifyvm", "{{.Name}}", "--memory", "2048" ],

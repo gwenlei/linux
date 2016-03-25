@@ -22,7 +22,7 @@
       "format": "qcow2",
       "headless": HEADLESS,
       "accelerator": "kvm",
-      "http_directory": "httpdir",
+      "http_directory": "CFGDIR",
       "http_port_min": 10082,
       "http_port_max": 10089,
       "ssh_host_port_min": 2222,
@@ -43,7 +43,7 @@
       "boot_wait": "5s",
       "boot_command":
       [
-        "<tab> text ks=KS_CFG<enter><wait>"
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/KS_CFG<enter><wait>"
       ]
     }
   ]

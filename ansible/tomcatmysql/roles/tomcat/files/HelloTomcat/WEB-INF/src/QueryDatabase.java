@@ -6,7 +6,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Vector;
-
+import java.io.*;
+import java.util.Properties;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -22,8 +23,15 @@ public class QueryDatabase extends HttpServlet {
 
 		DataManager dataManager = DataManager.getInstance();
 		Connection connection = dataManager.getConnection();
-
-		String sqlString = "SELECT *  from tablea";
+InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("mysql.properties");   
+Properties p = new Properties();   
+try {   
+p.load(inputStream);   
+} catch (IOException e1) {   
+e1.printStackTrace();   
+} 
+		String sqlString = "SELECT *  from "+p.getProperty("tablename");
+		//String sqlString = "SELECT *  from tablea";
 		try {
 			Statement statement = connection.createStatement();
 			ResultSet resultSet = statement.executeQuery(sqlString);

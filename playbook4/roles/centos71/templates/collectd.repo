@@ -2,5 +2,5 @@
 name = collectd yum
 baseurl = file:///root/rpm71b
 enabled=1
-gpgcheck=1
+gpgcheck=0
 gpgkey=file:///root/rpm71b/RPM-GPG-KEY-EPEL-7
