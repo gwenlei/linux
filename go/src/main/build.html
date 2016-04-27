@@ -79,7 +79,7 @@ function changesettingfile(filename)
       document.getElementById("software").removeChild(document.getElementById("software").firstChild);
     }
 
-			$.getJSON(filename,function(result){
+			var jq2=$.getJSON(filename,function(result){
                                 $.each(result.jsonmap, function(i, field){
                                         $("#ostype").append("<option value='"+i+"'>"+i+"</option>");
 					});
@@ -90,6 +90,9 @@ function changesettingfile(filename)
                                         }
 			        });
 		});
+jq2.complete(function(){
+changeset("ostype")
+});
 }
 
 function changeset(x)
