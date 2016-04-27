@@ -1,3 +1,4 @@
 {"qemu":["static/data/dataqemu.json","static/data/dataqemuwinrm.json"],
 "xenserver":["static/data/datavb2xen.json","static/data/dataqemu2xen.json"],
-"virtualbox":["static/data/datavb.json","static/data/datavbwinrm.json"]}
+"virtualbox":["static/data/datavb.json","static/data/datavbwinrm.json"],
+"default":["static/data/data.json"]}
