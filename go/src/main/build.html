@@ -9,8 +9,15 @@
 <script src="static/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="/static/js/test2.js"></script>
 <script type="text/javascript">
+filename="static/data/dataqemu.json"
+settingfilename="static/data/settingfile.json"
 $(document).ready(function(){
-			$.getJSON("/static/data/data.json",function(result){
+			$.getJSON(settingfilename,function(result){
+                                $.each(result.xenserver, function(i, field){
+                                        $("#settingfile").append("<option value='"+field+"'>"+field+"</option>");
+					});
+                        });
+			$.getJSON(filename,function(result){
                                 $.each(result.jsonmap, function(i, field){
                                         $("#ostype").append("<option value='"+i+"'>"+i+"</option>");
 					});
@@ -22,6 +29,69 @@ $(document).ready(function(){
 			        });
 		});
 });
+function changebuildtype(x)
+{
+if(document.getElementById(x).value=="qemu"){
+document.getElementById("vmname").value=(document.getElementById("ostype").value).replace(/\./g, "-")+".qcow2";
+}
+if(document.getElementById(x).value=="xenserver" || document.getElementById(x).value=="virtualbox"){
+document.getElementById("vmname").value=(document.getElementById("ostype").value).replace(/\./g, "-");
+}
+    while (document.getElementById("settingfile").hasChildNodes())
+    {
+      document.getElementById("settingfile").removeChild(document.getElementById("settingfile").firstChild);
+    }
+
+
+			var jq=$.getJSON(settingfilename,function(result){
+                                if(document.getElementById(x).value=="qemu"){
+                                $.each(result.qemu, function(i, field){
+                                        $("#settingfile").append("<option value='"+field+"'>"+field+"</option>");
+					});
+
+                                }else if(document.getElementById(x).value=="xenserver"){
+                                $.each(result.xenserver, function(i, field){
+                                        $("#settingfile").append("<option value='"+field+"'>"+field+"</option>");
+					});
+                                }else if(document.getElementById(x).value=="virtualbox"){
+                                $.each(result.virtualbox, function(i, field){
+                                        $("#settingfile").append("<option value='"+field+"'>"+field+"</option>");
+					});
+                           }
+                           document.getElementById("settingfile").options[0].selected=true;
+                           filename=document.getElementById("settingfile").options[0].text;
+                        });
+
+jq.complete(function(){
+changesettingfile(filename)
+});
+
+}
+
+function changesettingfile(filename)
+{
+    while (document.getElementById("ostype").hasChildNodes())
+    {
+      document.getElementById("ostype").removeChild(document.getElementById("ostype").firstChild);
+    }
+    while (document.getElementById("software").hasChildNodes())
+    {
+      document.getElementById("software").removeChild(document.getElementById("software").firstChild);
+    }
+
+			$.getJSON(filename,function(result){
+                                $.each(result.jsonmap, function(i, field){
+                                        $("#ostype").append("<option value='"+i+"'>"+i+"</option>");
+					});
+                                document.getElementById("ostype").options[0].selected=true;
+                                $.each(result.scriptmap, function(i, field){
+                                        if((document.getElementById("ostype").value).indexOf(i.substring(0,i.indexOf("-")))>=0) {
+                                          adddiv(field);
+                                        }
+			        });
+		});
+}
+
 function changeset(x)
 {
 if(document.getElementById("buildtype").value=="qemu"){
@@ -40,17 +110,17 @@ if((document.getElementById(x).value).indexOf("Ubuntu")>=0){
   document.getElementById("size").value="5";
 }
 if((document.getElementById(x).value).indexOf("Windows")>=0){
-  document.getElementById("user").value="clouder";
+  document.getElementById("user").value="Administrator";
   document.getElementById("disksize").value="20";
   document.getElementById("part").value="C";
   document.getElementById("size").value="18";
 }
-
-    while (document.getElementById("checkboxdiv").hasChildNodes())
+    while (document.getElementById("software").hasChildNodes())
     {
-      document.getElementById("checkboxdiv").removeChild(document.getElementById("checkboxdiv").firstChild);
+      document.getElementById("software").removeChild(document.getElementById("software").firstChild);
     }
-			$.getJSON("/static/data/data.json",function(result){
+filename=document.getElementById("settingfile").value
+			$.getJSON(filename,function(result){
                                 $.each(result.scriptmap, function(i, field){
                                         if((document.getElementById("ostype").value).indexOf(i.substring(0,i.indexOf("-")))>=0) {
                                           adddiv(field);
@@ -73,23 +143,13 @@ parttext1.id="softwares"+divnum;
 parttext1.name="software";
 parttext1.type="checkbox";
 parttext1.value=field;
-document.getElementById("checkboxdiv").appendChild(parttext1div);
+document.getElementById("software").appendChild(parttext1div);
 document.getElementById(parttext1div.id).appendChild(label1);
 document.getElementById(label1.id).appendChild(parttext1);
 label1.innerHTML=label1.innerHTML+field;
 divnum=divnum+1;
 }
-function changename(type)
-{
-if(type=="qemu"){
-document.getElementById("vmname").value=(document.getElementById("ostype").value).replace(/\./g, "-")+".qcow2";
-document.getElementById("settingfile").value="static/data/dataqemu.json";
-}
-if(type=="xenserver"){
-document.getElementById("vmname").value=(document.getElementById("ostype").value).replace(/\./g, "-");
-document.getElementById("settingfile").value="static/data/data.json";
-}
-}
+
 </script>
 </head>
 <body>
@@ -102,14 +162,21 @@ document.getElementById("settingfile").value="static/data/data.json";
 				<div class="form-group">
 					<label for="buildtype" class="col-sm-2 control-label">Buildtype</label>
 					<div class="col-sm-10">
-						<select class="form-control"  id="buildtype" name="buildtype" onchange="changename(this.value)">
+						<select class="form-control"  id="buildtype" name="buildtype" onchange="changebuildtype(this.id)">
                                                 <option value="xenserver">xenserver</option>
                                                 <option value="qemu">qemu</option>
+                                                <option value="virtualbox">virtualbox</option>
 						</select>
 					</div>
 				</div>
 
-
+				<div class="form-group">
+					<label for="settingfile" class="col-sm-2 control-label">Settingfile</label>
+					<div class="col-sm-10">
+						<select class="form-control"  id="settingfile" name="settingfile" onchange="changesettingfile(this.value)" >
+						</select>
+					</div>
+				</div>
 
 				<div class="form-group">
 					<label for="ostype" class="col-sm-2 control-label">Ostype</label>
@@ -121,7 +188,7 @@ document.getElementById("settingfile").value="static/data/data.json";
 				<div class="form-group">
 					<label for="user" class="col-sm-2 control-label">Vmname</label>
 					<div class="col-sm-10">
-						<input type="text" class="form-control" id="vmname" name="vmname" value="CentOS6-6.qcow2">
+						<input type="text" class="form-control" id="vmname" name="vmname" value="CentOS6-6">
 					</div>
 				</div>
 				<div class="form-group">
@@ -163,7 +230,7 @@ document.getElementById("settingfile").value="static/data/data.json";
 
 				<div class="form-group">
 					<label for="software" class="col-sm-2 control-label">Software</label>
-					<div class="col-sm-offset-2 col-sm-10" id="checkboxdiv">
+					<div class="col-sm-offset-2 col-sm-10" id="software">
 					</div>
 				</div>
 				<div class="form-group">
@@ -209,13 +276,6 @@ document.getElementById("settingfile").value="static/data/data.json";
          No
    </label>
 </div>
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="filename" class="col-sm-2 control-label">Settingfile</label>
-					<div class="col-sm-8">
-						<input type="text" class="form-control" id="settingfile" name="settingfile" value="static/data/dataqemu2xen.json">
-                                                
 					</div>
 				</div>
 

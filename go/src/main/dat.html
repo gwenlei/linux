@@ -9,7 +9,8 @@
 <script type="text/javascript" src="/static/js/test2.js"></script>
 <script type="text/javascript">
 divnum=1;
-filename="static/data/dataqemu2xen.json";
+filename="static/data/dataqemu.json";
+settingfilename="static/data/settingfile.json"
 function adddiv(divp,id,field)
 {
 var partdiv=document.createElement("div");
@@ -91,6 +92,14 @@ $(document).ready(function(){
                                         adddiv("floppymap",i,field)
 					});
  				});
+			$.getJSON(settingfilename,function(result){
+                                $.each(result, function(i, field){
+                                        $.each(field, function(i, field){
+                                           $("#settingfile").append("<option value='"+field+"'>"+field+"</option>");
+					});
+                                        
+				});
+ 		        });
 
 		});
 function changefile(name)
@@ -144,7 +153,8 @@ for(var key in divs){
 				<div class="form-group">
 					<label for="filename" class="col-sm-2 control-label">Settingfile</label>
 					<div class="col-sm-8">
-						<input type="text" class="form-control" id="settingfile" name="settingfile" value="static/data/dataqemu2xen.json">
+						<select class="form-control"  id="settingfile" name="settingfile"  >
+						</select>
                                                 
 					</div>
 
