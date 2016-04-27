@@ -153,14 +153,11 @@ for(var key in divs){
 				<div class="form-group">
 					<label for="filename" class="col-sm-2 control-label">Settingfile</label>
 					<div class="col-sm-8">
-						<select class="form-control"  id="settingfile" name="settingfile"  >
+						<select class="form-control"  id="settingfile" name="settingfile" onchange="changefile(this.value)" >
 						</select>
                                                 
 					</div>
 
-					<div class="col-sm-2">
-						<button type="button" class="btn btn-default" onclick="changefile(settingfile.value)">loadfile</button>
-					</div>
 				</div>
 
                       <div id="jsonmapb" class="form-group" >
