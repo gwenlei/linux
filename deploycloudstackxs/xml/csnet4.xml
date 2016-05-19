@@ -1,0 +1,10 @@
+<network>
+  <name>csnet4</name>
+  <uuid>33847f39-f3d8-417f-b9f8-572311372928</uuid>
+  <bridge name='virbr6' stp='on' delay='0'/>
+  <mac address='52:54:00:a8:52:b5'/>
+  <domain name='csnet4'/>
+  <ip address='192.168.58.1' netmask='255.255.255.0'>
+  </ip>
+</network>
+
