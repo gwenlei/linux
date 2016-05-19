@@ -1,0 +1,10 @@
+<network>
+  <name>csinnet</name>
+  <uuid>2cb4a6d9-361f-4a05-8e4b-eefc044472f1</uuid>
+  <bridge name='virbr7' stp='on' delay='0'/>
+  <mac address='52:54:00:02:d8:2e'/>
+  <domain name='csinnet'/>
+  <ip address='10.1.1.1' netmask='255.255.255.0'>
+  </ip>
+</network>
+
