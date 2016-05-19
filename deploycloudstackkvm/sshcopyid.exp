@@ -1,0 +1,11 @@
+#!/usr/bin/expect -f
+set userip [lindex $argv 0]
+set password [lindex $argv 1]
+set timeout -1
+spawn ssh-copy-id -i /root/.ssh/id_rsa.pub $userip
+set timeout 300
+expect "?*assword:*"
+send  "$password\r"
+send  "\r"
+expect eof
+exit
