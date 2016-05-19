@@ -36,6 +36,7 @@ scp /home/code/mycode/deploycloudstackxs/mysqlsecure.sh root@192.168.56.11:/root
 scp /home/code/mycode/deploycloudstackxs/mysql.sh root@192.168.56.11:/root
 scp /home/code/mycode/deploycloudstackxs/iptables.sh root@192.168.56.11:/root
 scp /home/html/downloads/systemvm64template-4.5-xen.vhd.bz2 root@192.168.56.11:/root
+scp /home/html/vhd-util root@192.168.56.11:/root
 ssh root@192.168.56.11 << EOF
 chmod +x mysql.sh mysqlsecure.sh iptables.sh sshcopyid.exp
 cd /etc/yum.repos.d/
@@ -84,13 +85,15 @@ cloudstack-setup-databases cloud:engine@127.0.0.1 --deploy-as=root:engine
 cloudstack-setup-management
 yum install nginx -y
 service nginx start
-cd /usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/
-wget http://192.168.0.82/vhd-util
+#cd /usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/
+#wget http://192.168.0.82/vhd-util
+cp /root/vhd-util /usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/
 chmod 755 /usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util
 #/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /exports/secondary -u http://192.168.0.82/downloads/systemvm64template-4.5-xen.vhd.bz2 -h xenserver -F
-/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /exports/secondary -u file:///root/systemvm64template-4.5-xen.vhd.bz2 -h xenserver -F
+/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /exports/secondary -f /root/systemvm64template-4.5-xen.vhd.bz2 -h xenserver -F
 
-/root/mysql.sh
 /root/iptables.sh
 service cloudstack-management restart
+sleep 3m
+/root/mysql.sh
 EOF
