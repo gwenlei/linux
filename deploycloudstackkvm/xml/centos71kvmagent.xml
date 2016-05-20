@@ -1,5 +1,5 @@
 <domain type='kvm'>
-  <name>testcentos71kvmagent</name>
+  <name>testcentos71cskvmagent</name>
   <memory unit='KiB'>4194304</memory>
   <currentMemory unit='KiB'>4194304</currentMemory>
   <vcpu placement='static'>2</vcpu>
@@ -30,7 +30,7 @@
     <emulator>/usr/libexec/qemu-kvm</emulator>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2'/>
-      <source file='/home/img/CentOS7-1forkvmagent.qcow2'/>
+      <source file='/home/html/downloads/CentOS7-1cskvmagent.qcow2'/>
       <target dev='hda' bus='ide'/>
       <address type='drive' controller='0' bus='0' target='0' unit='0'/>
     </disk>

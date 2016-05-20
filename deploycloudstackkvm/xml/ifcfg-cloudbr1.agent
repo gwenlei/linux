@@ -1,0 +1,4 @@
+DEVICE=cloudbr1
+TYPE=Bridge
+ONBOOT=yes
+BOOTPROTO=none

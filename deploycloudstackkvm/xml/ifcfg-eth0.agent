@@ -1,0 +1,6 @@
+NAME=eth0
+DEVICE=eth0
+TYPE=Ethernet
+ONBOOT=yes
+BOOTPROTO="none"
+BRIDGE="cloudbr0"
