@@ -14,10 +14,11 @@ testip=`virsh net-dhcp-leases default|grep $testmac|awk '{print $5}'|cut -d '/' 
 sed -i /$testip/d /root/.ssh/known_hosts
 ssh-keyscan $testip >> /root/.ssh/known_hosts
 ./sshcopyid.exp root@$testip engine
-scp xml/ifcfg* root@$testip:/etc/sysconfig/network-scripts/
+scp xml/ifcfg-eth0 root@$testip:/etc/sysconfig/network-scripts/ifcfg-eth0
 ssh root@$testip "sync"
 virsh shutdown testcentos71cskvm0
 virsh destroy testcentos71cskvm0
+virsh undefine testcentos71cskvm0
 sed -i /$testip/d /root/.ssh/known_hosts
 
 virsh shutdown testcentos71cskvm
@@ -31,11 +32,11 @@ ssh-keyscan 10.1.6.30 >> /root/.ssh/known_hosts
 ./sshcopyid.exp root@10.1.6.30 engine
 scp /etc/yum.repos.d/mrepo7.repo root@10.1.6.30:/etc/yum.repos.d/mrepo7.repo
 scp /etc/yum.repos.d/cloudstack451_7.repo root@10.1.6.30:/etc/yum.repos.d/cloudstack451_7.repo
-scp /home/code/mycode/deploycloudstackxs/sshcopyid.exp root@10.1.6.30:/root
-scp /home/code/mycode/deploycloudstackxs/mysqlsecure.sh root@10.1.6.30:/root
-scp /home/code/mycode/deploycloudstackxs/mysql.sh root@10.1.6.30:/root
-scp /home/code/mycode/deploycloudstackxs/iptables.sh root@10.1.6.30:/root
-scp /home/html/downloads/systemvm64template-4.5-xen.vhd.bz2 root@10.1.6.30:/root
+scp /home/code/mycode/deploycloudstackkvm/sshcopyid.exp root@10.1.6.30:/root
+scp /home/code/mycode/deploycloudstackkvm/mysqlsecure.sh root@10.1.6.30:/root
+scp /home/code/mycode/deploycloudstackkvm/mysql.sh root@10.1.6.30:/root
+scp /home/code/mycode/deploycloudstackkvm/iptables.sh root@10.1.6.30:/root
+scp /home/img/systemvmtest/systemvm64template-unknown2-kvm.qcow2.bz2 root@10.1.6.30:/root
 ssh root@10.1.6.30 << EOF
 chmod +x mysql.sh mysqlsecure.sh iptables.sh sshcopyid.exp
 cd /etc/yum.repos.d/
@@ -88,7 +89,7 @@ service nginx start
 #wget http://192.168.0.82/vhd-util
 #chmod 755 /usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util
 #/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /exports/secondary -u http://192.168.0.82/systemvmtest/systemvm64template-unknown2-kvm.qcow2.bz2 -h kvm -F
-/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /exports/secondary -f /home/img/systemvmtest/systemvm64template-unknown2-kvm.qcow2.bz2 -h kvm -F
+/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /exports/secondary -f /root/systemvm64template-unknown2-kvm.qcow2.bz2 -h kvm -F
 
 /root/mysql.sh
 /root/iptables.sh
