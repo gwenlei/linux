@@ -4,7 +4,7 @@ virsh shutdown testcentos71cloudstack
 virsh destroy testcentos71cloudstack
 rm -f /home/html/downloads/CentOS7-1.qcow2
 #wget -P /home/html/downloads/ --no-check-certificate https://192.168.0.82:9090/static/result/20160421103801/output/CentOS7-1.qcow2 
-cp /home/code/mycode/go/src/main/static/result/20160421103801/output/CentOS7-1.qcow2 /home/html/downloads/CentOS7-1.qcow2
+cp /home/html/downloads/CentOS7-1c.qcow2 /home/html/downloads/CentOS7-1.qcow2
 virsh undefine testcentos71
 virsh define xml/testcentos71.xml
 virsh start testcentos71
@@ -93,7 +93,6 @@ chmod 755 /usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util
 /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /exports/secondary -f /root/systemvm64template-4.5-xen.vhd.bz2 -h xenserver -F
 
 /root/iptables.sh
-service cloudstack-management restart
-sleep 3m
 /root/mysql.sh
+service cloudstack-management restart
 EOF
