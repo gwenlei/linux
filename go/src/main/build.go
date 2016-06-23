@@ -16,19 +16,28 @@ import (
         "bytes"
 )
 
+var conf map[string](map[string]string)
 var dat map[string](map[string]string)
 var reportlog map[string](map[string]string)
 
 func main() {
+        conf = make(map[string](map[string]string))
 	dat = make(map[string](map[string]string))
 	reportlog = make(map[string](map[string]string))
 	buf, _ := ioutil.ReadFile("static/data/data.json")
 	if len(buf) > 0 {
-		if err := json.Unmarshal(buf, &dat); err != nil {
+		if err := json.Unmarshal(buf, &conf); err != nil {
 			panic(err)
 		}
 	}
-	buf, _ = ioutil.ReadFile("static/data/reportlog.json")
+        //初始化设定
+	buf, _ = ioutil.ReadFile("static/data/dataqemu.json")
+	if len(buf) > 0 {
+		if err := json.Unmarshal(buf, &dat); err != nil {
+			panic(err)
+		}
+	}	
+        buf, _ = ioutil.ReadFile("static/data/reportlog.json")
 	if len(buf) > 0 {
 		if err := json.Unmarshal(buf, &reportlog); err != nil {
 			panic(err)
@@ -40,8 +49,8 @@ func main() {
 	http.HandleFunc("/setdat", setdat)
 	http.HandleFunc("/report", report)
 	http.HandleFunc("/upload", UploadServer)
-	//err := http.ListenAndServe(dat["servermap"]["server"], nil) //设置监听的端口
-	err := http.ListenAndServeTLS(dat["servermap"]["server"], "server.crt", "server.key", nil) //设置监听的端口
+	//err := http.ListenAndServe(conf["servermap"]["server"], nil) //设置监听的端口
+	err := http.ListenAndServeTLS(conf["servermap"]["server"], "server.crt", "server.key", nil) //设置监听的端口
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
@@ -150,9 +159,20 @@ func report(w http.ResponseWriter, r *http.Request) {
 func buildjson(r *http.Request) (timest string) {
 	timest = time.Now().Format("20060102150405")
 
+	dat = make(map[string](map[string]string))
+	bufst, _ := ioutil.ReadFile(r.Form.Get("settingfile"))
+	if len(bufst) > 0 {
+		if err := json.Unmarshal(bufst, &dat); err != nil {
+			panic(err)
+		}
+	} else {
+           fmt.Println("settingfile err")
+           os.Exit(1)
+        }
 	//report
 	reportlog[timest] = make(map[string]string)
 	reportlog[timest]["resultdir"] = dat["resultmap"]["resultdir"] + timest + "/"
+	reportlog[timest]["outputdir"] = reportlog[timest]["resultdir"] + "output/"
 	reportlog[timest]["timestamp"] = timest
         reportlog[timest]["buildtype"] = r.Form.Get("buildtype")
 	reportlog[timest]["ostype"] = r.Form.Get("ostype")
@@ -164,7 +184,6 @@ func buildjson(r *http.Request) (timest string) {
 	reportlog[timest]["headless"] = r.Form.Get("headless")
         reportlog[timest]["bzip2"] = r.Form.Get("bzip2")
         reportlog[timest]["settingfile"] = r.Form.Get("settingfile")
-	reportlog[timest]["outputdir"] = reportlog[timest]["resultdir"] + "output/"
 	reportlog[timest]["status"] = "waiting"
         if reportlog[timest]["buildtype"]=="qemu" {
            reportlog[timest]["downloadlink"]=reportlog[timest]["outputdir"]+reportlog[timest]["vmname"]
@@ -200,16 +219,6 @@ func buildjson(r *http.Request) (timest string) {
 	}
 	ioutil.WriteFile(tmplog, []byte(tmplogs), 0)
 
-	dat = make(map[string](map[string]string))
-	bufst, _ := ioutil.ReadFile(r.Form.Get("settingfile"))
-	if len(bufst) > 0 {
-		if err := json.Unmarshal(bufst, &dat); err != nil {
-			panic(err)
-		}
-	} else {
-           fmt.Println("settingfile err")
-           os.Exit(1)
-        }
         fmt.Println("settingfile:"+reportlog[timest]["settingfile"])
         fmt.Println("settingfileback:"+reportlog[timest]["resultdir"]+reportlog[timest]["settingfile"][strings.LastIndex(reportlog[timest]["settingfile"], "/")+1:])
         CopyFile(reportlog[timest]["settingfile"], reportlog[timest]["resultdir"]+reportlog[timest]["settingfile"][strings.LastIndex(reportlog[timest]["settingfile"], "/")+1:])       
@@ -219,7 +228,7 @@ func buildjson(r *http.Request) (timest string) {
 	cfg := dat["cfgmap"][r.Form.Get("ostype")]
 	reportlog[timest]["newcfg"] = reportlog[timest]["resultdir"] + "cfg/" + cfg[strings.LastIndex(cfg, "/")+1:]
 	//reportlog[timest]["newcfgs"] = "https://" + dat["servermap"]["server"] + "/" + reportlog[timest]["newcfg"]
-	if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS7.1"); index >= 0 {
+	if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS7"); index >= 0 {
 		reportlog[timest]["newcfgs"] = reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
 	} else if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS"); index >= 0 {
 		reportlog[timest]["newcfgs"] = "floppy:/" + reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
@@ -294,7 +303,7 @@ func buildjson(r *http.Request) (timest string) {
 			if k == 0 {
 				partitions = partitions + "d-i partman-auto/method string regular\nd-i partman-auto/expert_recipe string boot-root :: "
 				if v == "swap" {
-					partitions = partitions + "64 " + sizens + " 300% $primary{ } linux-swap method{ swap } format{ } . "
+					partitions = partitions + "64 " + sizens + " 300% $primary{ } linux-swap method{ swap } format{ } "
 				} else if v == "/boot" {
 					partitions = partitions + "64 " + sizens + " 200 ext4 $primary{ } $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ /boot } "
 				} else {
@@ -302,7 +311,7 @@ func buildjson(r *http.Request) (timest string) {
 				}
 			} else {
 				if v == "swap" {
-					partitions = partitions + "64 " + sizens + " 300% linux-swap method{ swap } format{ } . "
+					partitions = partitions + "64 " + sizens + " 300% linux-swap method{ swap } format{ } "
 				} else if v == "/boot" {
 					partitions = partitions + "64 " + sizens + " 200 ext4 $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ /boot } "
 				} else {
