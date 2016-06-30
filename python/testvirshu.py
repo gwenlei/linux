@@ -15,25 +15,26 @@ from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 
-shutil.copyfile("/home/html/downloads/CentOS7-2python2.qcow2", "/home/html/downloads/CentOS7-2python.qcow2")
+#shutil.copyfile("/home/html/downloads/CentOS7-2python2.qcow2", "/home/html/downloads/CentOS7-2python.qcow2")
 try:
   conn=libvirt.open("qemu:///system")
-  p = conn.lookupByName('testcentos72python')
-  p.create()
+  p = conn.lookupByName('testubuntu1604grub4')
+  if p.state()[0]<>1 :
+     p.create()
+     time.sleep(30)
 except (ValueError,libvirt.libvirtError):
   pass  
-time.sleep(30)
 obj = p.interfaceAddresses(0)
-print obj['vnet0']['addrs'][0]['addr']
+print obj[obj.keys()[0]]['addrs'][0]['addr']
 
-fo = open("host", "wb")
-fo.write(obj['vnet0']['addrs'][0]['addr']+" ansible_ssh_user=root ansible_ssh_pass=engine")
+fo = open("hostu", "wb")
+fo.write(obj[obj.keys()[0]]['addrs'][0]['addr']+" ansible_ssh_user=root ansible_ssh_pass=engine")
 fo.close()
 
 def simpletask():
   variable_manager = VariableManager()
   loader = DataLoader()
-  inventory = Inventory(loader=loader, variable_manager=variable_manager, host_list='./host')
+  inventory = Inventory(loader=loader, variable_manager=variable_manager, host_list='./hostu')
   playbook_path = './main.yml'
   if not os.path.exists(playbook_path):
       print '[INFO] The playbook does not exist'
@@ -43,12 +44,14 @@ def simpletask():
   variable_manager.extra_vars = {'hosts': 'vmware'} # This can accomodate various other command line arguments.`
   passwords = {}
   pbex = PlaybookExecutor(playbooks=[playbook_path], inventory=inventory, variable_manager=variable_manager, loader=loader, options=options, passwords=passwords)
+  results =99
   try:
     results = pbex.run()
-    print "results:"+results
+#    cb = ResultAccumulator()
+#    pbex._tqm._stdout_callback = cb
   except BaseException:
     pass  
-  return
+  return results
 
 cmd='ansible-galaxy list'
 p=subprocess.Popen(args=cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,close_fds=True)
@@ -68,7 +71,14 @@ for r in str(stdoutdata).split("\n"):
    foo.write("- hosts: all\n  roles:\n  - "+r22)
    foo.close()
    print("playbook "+str(i)+" "+r22)
-   simpletask()
+   result=simpletask()
+   fa = open("allrecord", "a")
+   fa.write("playbook "+str(i)+" "+r22+" result:"+str(result)+"\n")
+   fa.close()
+   if result==0 :
+      fs = open("successrecord", "a")
+      fs.write("playbook "+str(i)+" "+r22+"\n")
+      fs.close()
    i+=1
    break
 
