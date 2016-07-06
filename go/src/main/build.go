@@ -19,6 +19,7 @@ import (
 var conf map[string](map[string]string)
 var dat map[string](map[string]string)
 var reportlog map[string](map[string]string)
+var ansibleroles map[string](map[string]string)
 
 func main() {
         conf = make(map[string](map[string]string))
@@ -34,6 +35,12 @@ func main() {
 	buf, _ = ioutil.ReadFile("static/data/dataqemu.json")
 	if len(buf) > 0 {
 		if err := json.Unmarshal(buf, &dat); err != nil {
+			panic(err)
+		}
+	}	
+	buf, _ = ioutil.ReadFile("static/data/ansibleroles.json")
+	if len(buf) > 0 {
+		if err := json.Unmarshal(buf, &ansibleroles); err != nil {
 			panic(err)
 		}
 	}	
@@ -230,6 +237,8 @@ func buildjson(r *http.Request) (timest string) {
 	//reportlog[timest]["newcfgs"] = "https://" + dat["servermap"]["server"] + "/" + reportlog[timest]["newcfg"]
 	if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS7"); index >= 0 {
 		reportlog[timest]["newcfgs"] = reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
+	}else if index := strings.LastIndex(r.Form.Get("ostype"), "Ubuntu16"); index >= 0 {
+		reportlog[timest]["newcfgs"] = reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
 	} else if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS"); index >= 0 {
 		reportlog[timest]["newcfgs"] = "floppy:/" + reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
 	} else if index := strings.LastIndex(r.Form.Get("ostype"), "Ubuntu"); index >= 0 {
@@ -261,27 +270,68 @@ func buildjson(r *http.Request) (timest string) {
 	n := copy(script, r.Form["software"])
 	copy(newscript, script)
 	fmt.Println("n=", n)
+	fmt.Println("len=", len(r.Form["software"]))
         var scriptfiles string
-	if n > 0 {
-		
-		for k, v := range script {
+	if n > 0 || len(r.Form["ansible"])>0 {
+		scriptfiles=",\"provisioners\": [\n"+
+                            "{\n"+
+                            "\"type\": \"shell\",\n"+
+                            "\"execute_command\": \"echo 'SSH_PASSWORD' | {{.Vars}} sudo -S -E bash '{{.Path}}'\",\n"+
+                            "\"scripts\": [\n"
+		for k, v := range r.Form["software"] {
 			fmt.Println(k, v)
 			newscript[k] = reportlog[timest]["resultdir"] + "script/" + v[strings.LastIndex(v, "/")+1:]
-			scriptfiles = scriptfiles + ",\"" + newscript[k] + "\""
-			n = n - 1
+			scriptfiles = scriptfiles + "\"" + newscript[k] + "\""
 			// copy script
 			newscriptf, _ := os.Create(newscript[k])
 			scriptf, _ := os.Open(v)
 			io.Copy(newscriptf, scriptf)
 			defer scriptf.Close()
 			defer newscriptf.Close()
-                        if n==0 {
-                           break
+			n = n - 1
+                        if n > 0 {
+                          scriptfiles = scriptfiles +",\n"
                         }
 		}
+                if len(r.Form["ansible"])>0 {
+                   if len(r.Form["software"])>0 {scriptfiles = scriptfiles + ",\n"}
+                   scriptfiles = scriptfiles + "\"" + reportlog[timest]["resultdir"] + "script/ansible.sh" + "\""
+	           // copy script
+		   newscriptf, _ := os.Create(reportlog[timest]["resultdir"] + "script/ansible.sh")
+		   scriptf, _ := os.Open("template/script/ubuntu1604/ansible.sh")
+		   io.Copy(newscriptf, scriptf)
+		   defer scriptf.Close()
+		   defer newscriptf.Close()
+                }
+                scriptfiles = scriptfiles +"]}\n"
+
+                if len(r.Form["ansible"])>0 {
+                   ansiblefiles:= ",{\n"+   
+                                  "\"type\": \"ansible-local\",\n"+
+                                  "\"playbook_file\": \""+reportlog[timest]["resultdir"] +"ansible/main.yml\",\n"+
+                                  "\"role_paths\": [\n"
+                   ansiblemain:="---\n"+"- hosts: all\n"+"  roles:\n"
+                   n:=len(r.Form["ansible"])
+                   for _, v := range r.Form["ansible"]{
+                      ansiblefiles=ansiblefiles+"\"/etc/ansible/roles/"+ansibleroles[r.Form.Get("ostype")][v]+"\""
+                      ansiblemain=ansiblemain+"    - "+ansibleroles[r.Form.Get("ostype")][v]+"\n"
+                      n=n-1
+                      if n > 0{
+                         ansiblefiles=ansiblefiles+",\n"
+                         ansiblemain=ansiblemain+"\n"
+                      }
+                   }
+                   ansiblefiles=ansiblefiles+"]}"
+                   os.MkdirAll(reportlog[timest]["resultdir"]+"ansible/", 0777)
+                   os.Create(reportlog[timest]["resultdir"] +"ansible/main.yml")
+                   ioutil.WriteFile(reportlog[timest]["resultdir"] +"ansible/main.yml", []byte(ansiblemain), 0)
+                   scriptfiles = scriptfiles + ansiblefiles
+                }
+                scriptfiles = scriptfiles + "]"
 		fmt.Println("scriptfiles=", scriptfiles)
 	}
         line = strings.Replace(line, "SCRIPTFILES", scriptfiles, -1)
+
 	ioutil.WriteFile(reportlog[timest]["newjson"], []byte(line), 0)
 
 	// new cfg file part

@@ -11,23 +11,33 @@
 <script type="text/javascript">
 filename="static/data/dataqemu.json"
 settingfilename="static/data/settingfile.json"
+ansiblefilename="static/data/ansibleroles.json"
 $(document).ready(function(){
 			$.getJSON(settingfilename,function(result){
                                 $.each(result.xenserver, function(i, field){
                                         $("#settingfile").append("<option value='"+field+"'>"+field+"</option>");
-					});
+				});
                         });
 			$.getJSON(filename,function(result){
                                 $.each(result.jsonmap, function(i, field){
                                         $("#ostype").append("<option value='"+i+"'>"+i+"</option>");
-					});
+				});
                                 document.getElementById("ostype").options[0].selected=true;
                                 $.each(result.scriptmap, function(i, field){
                                         if((document.getElementById("ostype").value).indexOf(i.substring(0,i.indexOf("-")))>=0) {
-                                          adddiv(field);
+                                          adddiv("software",field);
                                         }
 			        });
-		});
+		        });
+			$.getJSON(ansiblefilename,function(result){
+                                $.each(result, function(i, field){
+                                        if((document.getElementById("ostype").value).indexOf(i)>=0) {
+                                          $.each(field, function(i, field){
+                                                adddiv("ansible",i);
+                                          });
+                                        }
+				});
+                        });
 });
 function changebuildtype(x)
 {
@@ -86,13 +96,23 @@ function changesettingfile(filename)
                                 document.getElementById("ostype").options[0].selected=true;
                                 $.each(result.scriptmap, function(i, field){
                                         if((document.getElementById("ostype").value).indexOf(i.substring(0,i.indexOf("-")))>=0) {
-                                          adddiv(field);
+                                          adddiv("software",field);
                                         }
 			        });
+                        var jq3=$.getJSON(ansiblefilename,function(result){
+                                $.each(result, function(i, field){
+                                        if((document.getElementById("ostype").value).indexOf(i)>=0) {
+                                          $.each(field, function(i, field){
+                                                adddiv("ansible",i);
+                                          });
+                                        }
+				});
+                        });
 		});
 jq2.complete(function(){
 changeset("ostype")
 });
+
 }
 
 function changeset(x)
@@ -102,21 +122,15 @@ document.getElementById("vmname").value=(document.getElementById(x).value).repla
 }else {
 document.getElementById("vmname").value=(document.getElementById(x).value).replace(/\./g, "-");
 }
-if((document.getElementById(x).value).indexOf("CentOS")>=0 || (document.getElementById(x).value).indexOf("OpenSuse")>=0){
-  document.getElementById("user").value="root";
-  document.getElementById("part").value="/";
-  document.getElementById("size").value="5";
-}
-if((document.getElementById(x).value).indexOf("Ubuntu")>=0){
-  document.getElementById("user").value="clouder";
-  document.getElementById("part").value="/";
-  document.getElementById("size").value="5";
-}
 if((document.getElementById(x).value).indexOf("Windows")>=0){
   document.getElementById("user").value="Administrator";
   document.getElementById("disksize").value="20";
   document.getElementById("part").value="C";
   document.getElementById("size").value="18";
+}else{
+  document.getElementById("user").value="root";
+  document.getElementById("part").value="/";
+  document.getElementById("size").value="5";
 }
     while (document.getElementById("software").hasChildNodes())
     {
@@ -126,27 +140,40 @@ filename=document.getElementById("settingfile").value
 			$.getJSON(filename,function(result){
                                 $.each(result.scriptmap, function(i, field){
                                         if((document.getElementById("ostype").value).indexOf(i.substring(0,i.indexOf("-")))>=0) {
-                                          adddiv(field);
+                                          adddiv("software",field);
                                         }
 			        });
-		});
+		        });
 
+    while (document.getElementById("ansible").hasChildNodes())
+    {
+      document.getElementById("ansible").removeChild(document.getElementById("ansible").firstChild);
+    }
+			$.getJSON(ansiblefilename,function(result){
+                                $.each(result, function(i, field){
+                                        if((document.getElementById("ostype").value).indexOf(i)>=0) {
+                                          $.each(field, function(i, field){
+                                                adddiv("ansible",i);
+                                          });
+                                        }
+				});
+                        });
 
 }
 divnum=1;
-function adddiv(field)
+function adddiv(id,field)
 {
 var parttext1div=document.createElement("div");
-parttext1div.id="software"+divnum;
+parttext1div.id=id+"div"+divnum;
 parttext1div.className="checkbox";
 var label1=document.createElement("label");
 label1.id="label"+divnum;
 var parttext1=document.createElement("input");
-parttext1.id="softwares"+divnum;
-parttext1.name="software";
+parttext1.id=id+"box"+divnum;
+parttext1.name=id;
 parttext1.type="checkbox";
 parttext1.value=field;
-document.getElementById("software").appendChild(parttext1div);
+document.getElementById(id).appendChild(parttext1div);
 document.getElementById(parttext1div.id).appendChild(label1);
 document.getElementById(label1.id).appendChild(parttext1);
 label1.innerHTML=label1.innerHTML+field;
@@ -234,6 +261,11 @@ divnum=divnum+1;
 				<div class="form-group">
 					<label for="software" class="col-sm-2 control-label">Software</label>
 					<div class="col-sm-offset-2 col-sm-10" id="software">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="ansible" class="col-sm-2 control-label">Ansible</label>
+					<div class="col-sm-offset-2 col-sm-10" id="ansible">
 					</div>
 				</div>
 				<div class="form-group">
