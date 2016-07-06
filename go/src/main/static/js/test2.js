@@ -6,12 +6,14 @@ else if(place==2){var op=document.getElementById("setdat");}
 else if(place==3){var op=document.getElementById("fileserver");}
 else if(place==4){var op=document.getElementById("report");}
 else if(place==5){var op=document.getElementById("upload");}
+else if(place==6){var op=document.getElementById("setansible");}
 op.className="";
 if(id=="build"){place=1;}
 else if(id=="setdat"){place=2;}
 else if(id=="fileserver"){place=3;}
 else if(id=="report"){place=4;}
 else if(id=="upload"){place=5;}
+else if(id=="setansible"){place=6;}
 var np=document.getElementById(id);
 np.className="active";
 }

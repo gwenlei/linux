@@ -54,6 +54,7 @@ func main() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/build", build) //设置访问的路由
 	http.HandleFunc("/setdat", setdat)
+        http.HandleFunc("/setansible", setansible)
 	http.HandleFunc("/report", report)
 	http.HandleFunc("/upload", UploadServer)
 	//err := http.ListenAndServe(conf["servermap"]["server"], nil) //设置监听的端口
@@ -114,6 +115,47 @@ func setdat(w http.ResponseWriter, r *http.Request) {
 		line, _ := json.Marshal(dat)
 		ioutil.WriteFile(filename, line, 0)
 		http.Redirect(w, r, "/setdat", 302)
+	}
+}
+
+func setansible(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method) //获取请求的方法
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("ansible.html")
+		t.Execute(w, nil)
+	} else {
+		//请求的是登陆数据，那么执行登陆的逻辑判断
+		r.ParseForm()
+		for k, v := range r.Form {
+			fmt.Println(k, ":", strings.Join(v, " "))
+		}
+		//clear ansibleroles map
+		for _, v := range ansibleroles {
+			for j, _ := range v {
+				delete(v, j)
+			}
+		}
+                ansibleroles["Ubuntu16.04"] = make(map[string]string)
+		//reset dat map
+		tmp := [...]string{"Ubuntu16.04"}
+		for _, vt := range tmp {
+			for k, v := range r.Form[vt+"+fieldid"] {
+				ansibleroles[vt][v] = r.Form[vt+"+fieldvalue"][k]
+			}
+		}
+                filename:="static/data/ansibleroles.json"
+                backfile:="static/data/log/"+filename[strings.LastIndex(filename, "/")+1:] + time.Now().Format("20060102150405")
+		newdataf, _ := os.Create(backfile)
+                fmt.Println("filename:",filename)
+                fmt.Println("backfile:",backfile)
+		//dataf, _ := os.Open("static/data/data.json")
+                dataf, _ := os.Open(filename)
+		io.Copy(newdataf, dataf)
+		defer newdataf.Close()
+		defer dataf.Close()
+		line, _ := json.Marshal(ansibleroles)
+		ioutil.WriteFile(filename, line, 0)
+		http.Redirect(w, r, "/setansible", 302)
 	}
 }
 
