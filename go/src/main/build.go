@@ -249,6 +249,9 @@ func buildjson(r *http.Request) (timest string) {
 	for _, v := range r.Form["software"] {
 		reportlog[timest]["software"] = reportlog[timest]["software"] + v + "\n"
 	}
+	for _, v := range r.Form["ansible"] {
+		reportlog[timest]["ansible"] = reportlog[timest]["ansible"] + v + " "
+	}
 	liner, _ := json.Marshal(reportlog)
 	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
 
