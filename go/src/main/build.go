@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -13,16 +14,17 @@ import (
 	"strconv"
 	"strings"
 	"time"
-        "bytes"
+        "bufio"
 )
 
 var conf map[string](map[string]string)
 var dat map[string](map[string]string)
 var reportlog map[string](map[string]string)
 var ansibleroles map[string](map[string]string)
+var ansiblelog map[string](map[string]string)
 
 func main() {
-        conf = make(map[string](map[string]string))
+	conf = make(map[string](map[string]string))
 	dat = make(map[string](map[string]string))
 	reportlog = make(map[string](map[string]string))
 	buf, _ := ioutil.ReadFile("static/data/data.json")
@@ -31,22 +33,28 @@ func main() {
 			panic(err)
 		}
 	}
-        //初始化设定
+	//初始化设定
 	buf, _ = ioutil.ReadFile("static/data/dataqemu.json")
 	if len(buf) > 0 {
 		if err := json.Unmarshal(buf, &dat); err != nil {
 			panic(err)
 		}
-	}	
+	}
 	buf, _ = ioutil.ReadFile("static/data/ansibleroles.json")
 	if len(buf) > 0 {
 		if err := json.Unmarshal(buf, &ansibleroles); err != nil {
 			panic(err)
 		}
-	}	
-        buf, _ = ioutil.ReadFile("static/data/reportlog.json")
+	}
+	buf, _ = ioutil.ReadFile("static/data/reportlog.json")
 	if len(buf) > 0 {
 		if err := json.Unmarshal(buf, &reportlog); err != nil {
+			panic(err)
+		}
+	}
+	buf, _ = ioutil.ReadFile("static/data/ansiblelog.json")
+	if len(buf) > 0 {
+		if err := json.Unmarshal(buf, &ansiblelog); err != nil {
 			panic(err)
 		}
 	}
@@ -54,9 +62,10 @@ func main() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/build", build) //设置访问的路由
 	http.HandleFunc("/setdat", setdat)
-        http.HandleFunc("/setansible", setansible)
+	http.HandleFunc("/setansible", setansible)
 	http.HandleFunc("/report", report)
 	http.HandleFunc("/upload", UploadServer)
+        http.HandleFunc("/search",search)
 	//err := http.ListenAndServe(conf["servermap"]["server"], nil) //设置监听的端口
 	err := http.ListenAndServeTLS(conf["servermap"]["server"], "server.crt", "server.key", nil) //设置监听的端口
 	if err != nil {
@@ -102,13 +111,13 @@ func setdat(w http.ResponseWriter, r *http.Request) {
 				dat[vt][v] = r.Form[vt+"+fieldvalue"][k]
 			}
 		}
-                filename:=r.Form.Get("settingfile")
-                backfile:="static/data/log/"+filename[strings.LastIndex(filename, "/")+1:] + time.Now().Format("20060102150405")
+		filename := r.Form.Get("settingfile")
+		backfile := "static/data/log/" + filename[strings.LastIndex(filename, "/")+1:] + time.Now().Format("20060102150405")
 		newdataf, _ := os.Create(backfile)
-                fmt.Println("filename:",filename)
-                fmt.Println("backfile:",backfile)
+		fmt.Println("filename:", filename)
+		fmt.Println("backfile:", backfile)
 		//dataf, _ := os.Open("static/data/data.json")
-                dataf, _ := os.Open(filename)
+		dataf, _ := os.Open(filename)
 		io.Copy(newdataf, dataf)
 		defer newdataf.Close()
 		defer dataf.Close()
@@ -135,7 +144,7 @@ func setansible(w http.ResponseWriter, r *http.Request) {
 				delete(v, j)
 			}
 		}
-                ansibleroles["Ubuntu16.04"] = make(map[string]string)
+		ansibleroles["Ubuntu16.04"] = make(map[string]string)
 		//reset dat map
 		tmp := [...]string{"Ubuntu16.04"}
 		for _, vt := range tmp {
@@ -143,13 +152,13 @@ func setansible(w http.ResponseWriter, r *http.Request) {
 				ansibleroles[vt][v] = r.Form[vt+"+fieldvalue"][k]
 			}
 		}
-                filename:="static/data/ansibleroles.json"
-                backfile:="static/data/log/"+filename[strings.LastIndex(filename, "/")+1:] + time.Now().Format("20060102150405")
+		filename := "static/data/ansibleroles.json"
+		backfile := "static/data/log/" + filename[strings.LastIndex(filename, "/")+1:] + time.Now().Format("20060102150405")
 		newdataf, _ := os.Create(backfile)
-                fmt.Println("filename:",filename)
-                fmt.Println("backfile:",backfile)
+		fmt.Println("filename:", filename)
+		fmt.Println("backfile:", backfile)
 		//dataf, _ := os.Open("static/data/data.json")
-                dataf, _ := os.Open(filename)
+		dataf, _ := os.Open(filename)
 		io.Copy(newdataf, dataf)
 		defer newdataf.Close()
 		defer dataf.Close()
@@ -175,7 +184,7 @@ func build(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("buildjson end", timest)
 		go callpacker(timest)
 		go calltransform(timest)
-                go callbzip2(timest)
+		go callbzip2(timest)
 		http.Redirect(w, r, "/build", 302)
 	}
 }
@@ -215,34 +224,34 @@ func buildjson(r *http.Request) (timest string) {
 			panic(err)
 		}
 	} else {
-           fmt.Println("settingfile err")
-           os.Exit(1)
-        }
+		fmt.Println("settingfile err")
+		os.Exit(1)
+	}
 	//report
 	reportlog[timest] = make(map[string]string)
 	reportlog[timest]["resultdir"] = dat["resultmap"]["resultdir"] + timest + "/"
 	reportlog[timest]["outputdir"] = reportlog[timest]["resultdir"] + "output/"
 	reportlog[timest]["timestamp"] = timest
-        reportlog[timest]["buildtype"] = r.Form.Get("buildtype")
+	reportlog[timest]["buildtype"] = r.Form.Get("buildtype")
 	reportlog[timest]["ostype"] = r.Form.Get("ostype")
 	reportlog[timest]["vmname"] = r.Form.Get("vmname")
 	reportlog[timest]["user"] = r.Form.Get("user")
 	reportlog[timest]["password"] = r.Form.Get("password")
 	reportlog[timest]["disksize"] = r.Form.Get("disksize")
-        reportlog[timest]["compat"] = r.Form.Get("compat")
+	reportlog[timest]["compat"] = r.Form.Get("compat")
 	reportlog[timest]["headless"] = r.Form.Get("headless")
-        reportlog[timest]["bzip2"] = r.Form.Get("bzip2")
-        reportlog[timest]["settingfile"] = r.Form.Get("settingfile")
+	reportlog[timest]["bzip2"] = r.Form.Get("bzip2")
+	reportlog[timest]["settingfile"] = r.Form.Get("settingfile")
 	reportlog[timest]["status"] = "waiting"
-        if reportlog[timest]["buildtype"]=="qemu" {
-           reportlog[timest]["downloadlink"]=reportlog[timest]["outputdir"]+reportlog[timest]["vmname"]
-        }else{
-           reportlog[timest]["downloadlink"]=reportlog[timest]["outputdir"]+reportlog[timest]["vmname"]+".vhd"
-        }
-        if reportlog[timest]["bzip2"]=="Yes" {
-           reportlog[timest]["downloadlink"]=reportlog[timest]["downloadlink"]+".bz2"
-        }
-        fmt.Println("downloadlink=", reportlog[timest]["downloadlink"])
+	if reportlog[timest]["buildtype"] == "qemu" {
+		reportlog[timest]["downloadlink"] = reportlog[timest]["outputdir"] + reportlog[timest]["vmname"]
+	} else {
+		reportlog[timest]["downloadlink"] = reportlog[timest]["outputdir"] + reportlog[timest]["vmname"] + ".vhd"
+	}
+	if reportlog[timest]["bzip2"] == "Yes" {
+		reportlog[timest]["downloadlink"] = reportlog[timest]["downloadlink"] + ".bz2"
+	}
+	fmt.Println("downloadlink=", reportlog[timest]["downloadlink"])
 	for k, v := range r.Form["part"] {
 		reportlog[timest]["part"] = reportlog[timest]["part"] + v + ":" + r.Form["size"][k] + " "
 	}
@@ -271,9 +280,9 @@ func buildjson(r *http.Request) (timest string) {
 	}
 	ioutil.WriteFile(tmplog, []byte(tmplogs), 0)
 
-        fmt.Println("settingfile:"+reportlog[timest]["settingfile"])
-        fmt.Println("settingfileback:"+reportlog[timest]["resultdir"]+reportlog[timest]["settingfile"][strings.LastIndex(reportlog[timest]["settingfile"], "/")+1:])
-        CopyFile(reportlog[timest]["settingfile"], reportlog[timest]["resultdir"]+reportlog[timest]["settingfile"][strings.LastIndex(reportlog[timest]["settingfile"], "/")+1:])       
+	fmt.Println("settingfile:" + reportlog[timest]["settingfile"])
+	fmt.Println("settingfileback:" + reportlog[timest]["resultdir"] + reportlog[timest]["settingfile"][strings.LastIndex(reportlog[timest]["settingfile"], "/")+1:])
+	CopyFile(reportlog[timest]["settingfile"], reportlog[timest]["resultdir"]+reportlog[timest]["settingfile"][strings.LastIndex(reportlog[timest]["settingfile"], "/")+1:])
 
 	json := dat["jsonmap"][r.Form.Get("ostype")]
 	reportlog[timest]["newjson"] = reportlog[timest]["resultdir"] + "json/" + json[strings.LastIndex(json, "/")+1:]
@@ -282,7 +291,7 @@ func buildjson(r *http.Request) (timest string) {
 	//reportlog[timest]["newcfgs"] = "https://" + dat["servermap"]["server"] + "/" + reportlog[timest]["newcfg"]
 	if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS7"); index >= 0 {
 		reportlog[timest]["newcfgs"] = reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
-	}else if index := strings.LastIndex(r.Form.Get("ostype"), "Ubuntu16"); index >= 0 {
+	} else if index := strings.LastIndex(r.Form.Get("ostype"), "Ubuntu16"); index >= 0 {
 		reportlog[timest]["newcfgs"] = reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
 	} else if index := strings.LastIndex(r.Form.Get("ostype"), "CentOS"); index >= 0 {
 		reportlog[timest]["newcfgs"] = "floppy:/" + reportlog[timest]["newcfg"][strings.LastIndex(reportlog[timest]["newcfg"], "/")+1:]
@@ -307,22 +316,22 @@ func buildjson(r *http.Request) (timest string) {
 	line = strings.Replace(line, "KS_CFG", reportlog[timest]["newcfgs"], -1)
 	line = strings.Replace(line, "WIN_CFG", reportlog[timest]["newcfg"], -1)
 	line = strings.Replace(line, "FLOPPYDIR", reportlog[timest]["resultdir"]+dat["floppymap"][r.Form.Get("ostype")][strings.LastIndex(dat["floppymap"][r.Form.Get("ostype")], "/")+1:], -1)
-        line = strings.Replace(line, "CFGDIR", reportlog[timest]["resultdir"]+"cfg", -1)
+	line = strings.Replace(line, "CFGDIR", reportlog[timest]["resultdir"]+"cfg", -1)
 	line = strings.Replace(line, "HEADLESS", r.Form.Get("headless"), -1)
-        line = strings.Replace(line, "VHDDIR", reportlog[timest]["resultdir"]+"vhd/", -1)
+	line = strings.Replace(line, "VHDDIR", reportlog[timest]["resultdir"]+"vhd/", -1)
 	var script = make([]string, 10)
 	var newscript = make([]string, 10)
 	n := copy(script, r.Form["software"])
 	copy(newscript, script)
 	fmt.Println("n=", n)
 	fmt.Println("len=", len(r.Form["software"]))
-        var scriptfiles string
-	if n > 0 || len(r.Form["ansible"])>0 {
-		scriptfiles=",\"provisioners\": [\n"+
-                            "{\n"+
-                            "\"type\": \"shell\",\n"+
-                            "\"execute_command\": \"echo 'SSH_PASSWORD' | {{.Vars}} sudo -S -E bash '{{.Path}}'\",\n"+
-                            "\"scripts\": [\n"
+	var scriptfiles string
+	if n > 0 || len(r.Form["ansible"]) > 0 {
+		scriptfiles = ",\"provisioners\": [\n" +
+			"{\n" +
+			"\"type\": \"shell\",\n" +
+			"\"execute_command\": \"echo 'SSH_PASSWORD' | {{.Vars}} sudo -S -E bash '{{.Path}}'\",\n" +
+			"\"scripts\": [\n"
 		for k, v := range r.Form["software"] {
 			fmt.Println(k, v)
 			newscript[k] = reportlog[timest]["resultdir"] + "script/" + v[strings.LastIndex(v, "/")+1:]
@@ -334,48 +343,50 @@ func buildjson(r *http.Request) (timest string) {
 			defer scriptf.Close()
 			defer newscriptf.Close()
 			n = n - 1
-                        if n > 0 {
-                          scriptfiles = scriptfiles +",\n"
-                        }
+			if n > 0 {
+				scriptfiles = scriptfiles + ",\n"
+			}
 		}
-                if len(r.Form["ansible"])>0 {
-                   if len(r.Form["software"])>0 {scriptfiles = scriptfiles + ",\n"}
-                   scriptfiles = scriptfiles + "\"" + reportlog[timest]["resultdir"] + "script/ansible.sh" + "\""
-	           // copy script
-		   newscriptf, _ := os.Create(reportlog[timest]["resultdir"] + "script/ansible.sh")
-		   scriptf, _ := os.Open("template/script/ubuntu1604/ansible.sh")
-		   io.Copy(newscriptf, scriptf)
-		   defer scriptf.Close()
-		   defer newscriptf.Close()
-                }
-                scriptfiles = scriptfiles +"]}\n"
+		if len(r.Form["ansible"]) > 0 {
+			if len(r.Form["software"]) > 0 {
+				scriptfiles = scriptfiles + ",\n"
+			}
+			scriptfiles = scriptfiles + "\"" + reportlog[timest]["resultdir"] + "script/ansible.sh" + "\""
+			// copy script
+			newscriptf, _ := os.Create(reportlog[timest]["resultdir"] + "script/ansible.sh")
+			scriptf, _ := os.Open("template/script/ubuntu1604/ansible.sh")
+			io.Copy(newscriptf, scriptf)
+			defer scriptf.Close()
+			defer newscriptf.Close()
+		}
+		scriptfiles = scriptfiles + "]}\n"
 
-                if len(r.Form["ansible"])>0 {
-                   ansiblefiles:= ",{\n"+   
-                                  "\"type\": \"ansible-local\",\n"+
-                                  "\"playbook_file\": \""+reportlog[timest]["resultdir"] +"ansible/main.yml\",\n"+
-                                  "\"role_paths\": [\n"
-                   ansiblemain:="---\n"+"- hosts: all\n"+"  roles:\n"
-                   n:=len(r.Form["ansible"])
-                   for _, v := range r.Form["ansible"]{
-                      ansiblefiles=ansiblefiles+"\"/etc/ansible/roles/"+ansibleroles[r.Form.Get("ostype")][v]+"\""
-                      ansiblemain=ansiblemain+"    - "+ansibleroles[r.Form.Get("ostype")][v]+"\n"
-                      n=n-1
-                      if n > 0{
-                         ansiblefiles=ansiblefiles+",\n"
-                         ansiblemain=ansiblemain+"\n"
-                      }
-                   }
-                   ansiblefiles=ansiblefiles+"]}"
-                   os.MkdirAll(reportlog[timest]["resultdir"]+"ansible/", 0777)
-                   os.Create(reportlog[timest]["resultdir"] +"ansible/main.yml")
-                   ioutil.WriteFile(reportlog[timest]["resultdir"] +"ansible/main.yml", []byte(ansiblemain), 0)
-                   scriptfiles = scriptfiles + ansiblefiles
-                }
-                scriptfiles = scriptfiles + "]"
+		if len(r.Form["ansible"]) > 0 {
+			ansiblefiles := ",{\n" +
+				"\"type\": \"ansible-local\",\n" +
+				"\"playbook_file\": \"" + reportlog[timest]["resultdir"] + "ansible/main.yml\",\n" +
+				"\"role_paths\": [\n"
+			ansiblemain := "---\n" + "- hosts: all\n" + "  roles:\n"
+			n := len(r.Form["ansible"])
+			for _, v := range r.Form["ansible"] {
+				ansiblefiles = ansiblefiles + "\"/etc/ansible/roles/" + ansibleroles[r.Form.Get("ostype")][v] + "\""
+				ansiblemain = ansiblemain + "    - " + ansibleroles[r.Form.Get("ostype")][v] + "\n"
+				n = n - 1
+				if n > 0 {
+					ansiblefiles = ansiblefiles + ",\n"
+					ansiblemain = ansiblemain + "\n"
+				}
+			}
+			ansiblefiles = ansiblefiles + "]}"
+			os.MkdirAll(reportlog[timest]["resultdir"]+"ansible/", 0777)
+			os.Create(reportlog[timest]["resultdir"] + "ansible/main.yml")
+			ioutil.WriteFile(reportlog[timest]["resultdir"]+"ansible/main.yml", []byte(ansiblemain), 0)
+			scriptfiles = scriptfiles + ansiblefiles
+		}
+		scriptfiles = scriptfiles + "]"
 		fmt.Println("scriptfiles=", scriptfiles)
 	}
-        line = strings.Replace(line, "SCRIPTFILES", scriptfiles, -1)
+	line = strings.Replace(line, "SCRIPTFILES", scriptfiles, -1)
 
 	ioutil.WriteFile(reportlog[timest]["newjson"], []byte(line), 0)
 
@@ -454,95 +465,96 @@ func callpacker(timest string) *os.Process {
 		//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
 		Files: []*os.File{inf, outf, errf},
 	}
-        p, err := os.StartProcess(dat["servermap"]["packer"], []string{dat["servermap"]["packer"], "build",reportlog[timest]["newjson"]}, attr)
+	p, err := os.StartProcess(dat["servermap"]["packer"], []string{dat["servermap"]["packer"], "build", reportlog[timest]["newjson"]}, attr)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 	fmt.Println("p=[", p, "]")
 	reportlog[timest]["packerpid"] = strconv.Itoa(p.Pid)
-        go checkstatus(p, "packer", timest)
+	go checkstatus(p, "packer", timest)
 	return p
 }
 func calltransform(timest string) {
-        if reportlog[timest]["compat"] != "0.1" {
-           fmt.Printf("compat:No\n")
-           return
-         }
-        for {
-          if reportlog[timest]["status"] == "packer failed" { 
-             fmt.Printf("compat:packer failed\n")
-             return
-          }else if reportlog[timest]["status"] == "packer success" { 
-             break
-          }else{
-             fmt.Printf("compat sleep 2m\n")
-             time.Sleep(120*time.Second)
-          }
-        }
+	if reportlog[timest]["compat"] != "0.1" {
+		fmt.Printf("compat:No\n")
+		return
+	}
+	for {
+		if reportlog[timest]["status"] == "packer failed" {
+			fmt.Printf("compat:packer failed\n")
+			return
+		} else if reportlog[timest]["status"] == "packer success" {
+			break
+		} else {
+			fmt.Printf("compat sleep 2m\n")
+			time.Sleep(120 * time.Second)
+		}
+	}
 
-		fmt.Println("calltransform")
-		inf, _ := os.Create(reportlog[timest]["resultdir"] + "inf2.log")
-		outf, _ := os.Create(reportlog[timest]["resultdir"] + "convert.log")
-		errf, _ := os.Create(reportlog[timest]["resultdir"] + "errf2.log")
-		attr := &os.ProcAttr{
-			//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
-			Files: []*os.File{inf, outf, errf},
-		}
-		output := reportlog[timest]["resultdir"] + "output/" + reportlog[timest]["vmname"]
-		newoutput := reportlog[timest]["resultdir"] + "output/tr" + reportlog[timest]["vmname"]
-		fmt.Println("output=[", output, "]")
-		fmt.Println("newoutput=[", newoutput, "]")
-		p2, err := os.StartProcess("/bin/qemu-img", []string{"/bin/qemu-img", "convert", "-f", "qcow2", output, "-O", "qcow2", "-o", "compat=0.10", newoutput}, attr)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-		fmt.Println("p2=[", p2, "]")
-		reportlog[timest]["transformpid"] = strconv.Itoa(p2.Pid)
-		go checkstatus(p2, "transform", timest)
+	fmt.Println("calltransform")
+	inf, _ := os.Create(reportlog[timest]["resultdir"] + "inf2.log")
+	outf, _ := os.Create(reportlog[timest]["resultdir"] + "convert.log")
+	errf, _ := os.Create(reportlog[timest]["resultdir"] + "errf2.log")
+	attr := &os.ProcAttr{
+		//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+		Files: []*os.File{inf, outf, errf},
+	}
+	output := reportlog[timest]["resultdir"] + "output/" + reportlog[timest]["vmname"]
+	newoutput := reportlog[timest]["resultdir"] + "output/tr" + reportlog[timest]["vmname"]
+	fmt.Println("output=[", output, "]")
+	fmt.Println("newoutput=[", newoutput, "]")
+	p2, err := os.StartProcess("/bin/qemu-img", []string{"/bin/qemu-img", "convert", "-f", "qcow2", output, "-O", "qcow2", "-o", "compat=0.10", newoutput}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println("p2=[", p2, "]")
+	reportlog[timest]["transformpid"] = strconv.Itoa(p2.Pid)
+	go checkstatus(p2, "transform", timest)
 
 }
 
 func callbzip2(timest string) {
-        if reportlog[timest]["bzip2"]!="Yes" {
-          fmt.Printf("bzip2:No\n")
-          return
-        }
-        for {
-          if reportlog[timest]["status"] == "packer failed" { 
-             fmt.Printf("compat:packer failed\n")
-             return
-          }else if reportlog[timest]["status"] == "transform failed" { 
-             fmt.Printf("compat:transform failed\n")
-             return
-          }else if reportlog[timest]["compat"] == "0.1" && reportlog[timest]["status"] == "transform success" { break
-          }else if reportlog[timest]["compat"] != "0.1" && reportlog[timest]["status"] == "packer success" {
-               break
-          }else{
-             fmt.Printf("bzip2 sleep 2m\n")
-             time.Sleep(120*time.Second)
-          }
-        }
-        var vmstr string
-        if reportlog[timest]["buildtype"]=="qemu"{
-           vmstr=reportlog[timest]["outputdir"]+reportlog[timest]["vmname"]
-        }else{
-        vmstr=reportlog[timest]["outputdir"]+reportlog[timest]["vmname"]+".vhd"
-        }
-        fmt.Printf("bzip2:"+vmstr+"\n")
-        reportlog[timest]["status"] = "bzip2 running"
-        liner, _ := json.Marshal(reportlog)
+	if reportlog[timest]["bzip2"] != "Yes" {
+		fmt.Printf("bzip2:No\n")
+		return
+	}
+	for {
+		if reportlog[timest]["status"] == "packer failed" {
+			fmt.Printf("compat:packer failed\n")
+			return
+		} else if reportlog[timest]["status"] == "transform failed" {
+			fmt.Printf("compat:transform failed\n")
+			return
+		} else if reportlog[timest]["compat"] == "0.1" && reportlog[timest]["status"] == "transform success" {
+			break
+		} else if reportlog[timest]["compat"] != "0.1" && reportlog[timest]["status"] == "packer success" {
+			break
+		} else {
+			fmt.Printf("bzip2 sleep 2m\n")
+			time.Sleep(120 * time.Second)
+		}
+	}
+	var vmstr string
+	if reportlog[timest]["buildtype"] == "qemu" {
+		vmstr = reportlog[timest]["outputdir"] + reportlog[timest]["vmname"]
+	} else {
+		vmstr = reportlog[timest]["outputdir"] + reportlog[timest]["vmname"] + ".vhd"
+	}
+	fmt.Printf("bzip2:" + vmstr + "\n")
+	reportlog[timest]["status"] = "bzip2 running"
+	liner, _ := json.Marshal(reportlog)
 	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
-        cmd := exec.Command("bzip2", "-z", vmstr)
-        cmd.Stdin = strings.NewReader("some input")
-        var out bytes.Buffer
-        cmd.Stdout = &out
-        err := cmd.Run()
-        if err != nil {
-                log.Fatal(err)
-        }
-        fmt.Printf("bzip2 end:"+vmstr+"\n")
-        reportlog[timest]["status"] = "bzip2 success"
-        liner, _ = json.Marshal(reportlog)
+	cmd := exec.Command("bzip2", "-z", vmstr)
+	cmd.Stdin = strings.NewReader("some input")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("bzip2 end:" + vmstr + "\n")
+	reportlog[timest]["status"] = "bzip2 success"
+	liner, _ = json.Marshal(reportlog)
 	ioutil.WriteFile("static/data/reportlog.json", liner, 0)
 }
 func checkstatus(p *os.Process, pname string, timest string) bool {
@@ -696,28 +708,223 @@ func UploadServer(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func indexHandle(w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Println("获取页面失败")
+func searchroles(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method) //获取请求的方法
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("search.html")
+		t.Execute(w, nil)
+	} else {
+		//请求的是登陆数据，那么执行登陆的逻辑判断
+		r.ParseForm()
+		for k, v := range r.Form {
+			fmt.Println(k, ":", strings.Join(v, " "))
 		}
-	}()
 
-	// 上传页面
-	w.Header().Add("Content-Type", "text/html")
-	w.WriteHeader(200)
-	html := `
-		<html>
-	    <head>
-	        <title>Golang Upload Files</title>
-	    </head>
-	    <body>
-	        <form id="uploadForm"  enctype="multipart/form-data" action="/upload" method="POST">
-	            <p>Golang Upload</p> <br/>
-	            <input type="file" id="file1" name="userfile" multiple />	<br/>
-	            <input type="submit" value="Upload">
-	        </form>
-	   	</body>
-		</html>`
-	io.WriteString(w, html)
+		timest := time.Now().Format("20060102150405")
+                ansiblelog[timest] = make(map[string]string)
+                ansiblelog[timest]["resultdir"] = "static/result/ansible/"+timest+"/"
+                os.MkdirAll(ansiblelog[timest]["resultdir"], 0777)
+                ansiblelog[timest]["ostype"]=r.Form.Get("ostype")
+                ansiblelog[timest]["times"]=r.Form.Get("times")
+                ansiblelog[timest]["status"]="running"
+                ansiblelog[timest]["rolename"]=r.Form.Get("rolename")
+                ansiblelog[timest]["timestamp"]=timest
+                ansiblelog[timest]["log"]=ansiblelog[timest]["resultdir"]+"ansible.log"
+                liner, _ := json.Marshal(ansiblelog)
+	        ioutil.WriteFile("static/data/ansiblelog.json", liner, 0)
+
+  
+		go callsearch(timest)
+		go callfilter(timest)
+		http.Redirect(w, r, "/searchroles", 302)
+	}
 }
+
+func callsearch(timest string) {
+	fmt.Println("callsearch", timest)
+	inf, _ := os.Create(ansiblelog[timest]["resultdir"] + "inf.log")
+	outf, _ := os.Create(ansiblelog[timest]["resultdir"] + "search.log")
+	errf, _ := os.Create(ansiblelog[timest]["resultdir"] + "errf.log")
+	attr := &os.ProcAttr{
+		//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+		Files: []*os.File{inf, outf, errf},
+	}
+	p, err := os.StartProcess("/usr/bin/ansible-galaxy",[]string{"/usr/bin/ansible-galaxy", "search", ansiblelog[timest]["rolename"]}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println("p=[", p, "]")
+	ansiblelog[timest]["searchpid"] = strconv.Itoa(p.Pid)
+	go checkansiblestatus(p, "search", timest)
+}
+
+func checkansiblestatus(p *os.Process, pname string, timest string) {
+	fmt.Println("checkstatus", pname, p)
+	ansiblelog[timest]["status"] = pname + " running"
+	ansiblelog[timest][pname+"start"] = time.Now().Format("20060102150405")
+	liner, _ := json.Marshal(ansiblelog)
+	ioutil.WriteFile("static/data/ansiblelog.json", liner, 0)
+	pw, _ := p.Wait()
+	fmt.Println("checkstatus over", p)
+	fmt.Println("timest=", timest)
+	ansiblelog[timest][pname+"stop"] = time.Now().Format("20060102150405")
+	t1, _ := time.Parse("20060102150405", ansiblelog[timest][pname+"stop"])
+	t2, _ := time.Parse("20060102150405", ansiblelog[timest][pname+"start"])
+	ansiblelog[timest][pname+"time"] = strconv.Itoa(int(t1.Sub(t2)) / 1e9)
+	fmt.Println("t1=", t1)
+	fmt.Println("t2=", t2)
+	fmt.Println("cost=", t1.Sub(t2))
+	status := pw.Success()
+	if status == true {
+		ansiblelog[timest]["status"] = pname + " success"
+		fmt.Println("checkstatus over success ", pname, p)
+	} else {
+		ansiblelog[timest]["status"] = pname + " failed"
+		fmt.Println("checkstatus over failed ", pname, p)
+	}
+	liner, _ = json.Marshal(ansiblelog)
+	ioutil.WriteFile("static/data/ansiblelog.json", liner, 0)
+}
+
+func callfilter(timest string) {
+	for {
+		if ansiblelog[timest]["status"] == "search failed" {
+			fmt.Printf("search failed\n")
+			return
+		} else if ansiblelog[timest]["status"] == "search success" {
+			break
+		}else {
+			fmt.Printf("callfilter sleep 2m\n")
+			time.Sleep(120 * time.Second)
+		}
+	}
+        ansiblelog[timest]["status"] = "filter running"
+        ansiblelog[timest]["filterstart"] = time.Now().Format("20060102150405")
+	liner, _ := json.Marshal(ansiblelog)
+	ioutil.WriteFile("static/data/ansiblelog.json", liner, 0)
+
+	f, err := os.Open(ansiblelog[timest]["resultdir"] + "search.log")
+	if err != nil {
+		fmt.Println("open err")
+	}
+	buf := bufio.NewReader(f)
+	n := 0
+	rolelist := []string{}
+	for {
+		line, err := buf.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+		}
+		n = n + 1
+		if n < 6 {
+			continue
+		}
+		rolelist = append(rolelist, strings.Split(line, " ")[1])
+	}
+	fmt.Println("rolelist sum", len(rolelist))
+	n = 0
+
+        outf, _ := os.Create(ansiblelog[timest]["resultdir"]+"ansible.log")
+	attr := &os.ProcAttr{
+		Files: []*os.File{outf, outf, outf},
+	}
+     for _, v := range rolelist {
+        n=n+1
+        fmt.Println("n=",n)
+	p, err := os.StartProcess("/usr/bin/ansible-galaxy", []string{"/usr/bin/ansible-galaxy", "install", v}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ := p.Wait()
+	fmt.Println("ansible-galaxy install ", v,pw.Success())
+
+	fout, err := os.Create(ansiblelog[timest]["resultdir"]+"main.yml")
+	if err != nil {
+		fmt.Println("main.yml", err)
+	}
+	fout.WriteString("- hosts: all\n  roles:\n  - " + v)
+	fout.Close()
+	fout, err = os.Create(ansiblelog[timest]["resultdir"]+"host")
+	if err != nil {
+		fmt.Println("host", err)
+	}
+	fout.WriteString("192.168.122.253 ansible_ssh_user=root ansible_ssh_pass=engine")
+	fout.Close()
+
+	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "shutdown", "testubuntu1604grub3"}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("virsh shutdown end ",pw.Success())
+        time.Sleep(60 * time.Second)
+
+	p, err = os.StartProcess("/usr/bin/qemu-img", []string{"/usr/bin/qemu-img", "create", "-f", "qcow2", "/home/html/downloads/Ubuntu16-04(2).qcow2", "-b", "/home/html/downloads/Ubuntu16-04(4).qcow2"}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("qemu-img end ",pw.Success())
+
+	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "start", "testubuntu1604grub3"}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("virsh start ",pw.Success())
+        time.Sleep(60 * time.Second)
+
+	p, err = os.StartProcess("/usr/bin/ansible-playbook", []string{"/usr/bin/ansible-playbook", "-i", ansiblelog[timest]["resultdir"]+"host",ansiblelog[timest]["resultdir"]+"main.yml"}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("ansible-playbook end ",v,pw.Success())
+        if pw.Success(){
+           ansiblelog[timest]["successroles"] = ansiblelog[timest]["successroles"]+" "+v
+	   liner, _ := json.Marshal(ansiblelog)
+	   ioutil.WriteFile("static/data/ansiblelog.json", liner, 0)
+        }
+   }
+
+	t1, _ := time.Parse("20060102150405", ansiblelog[timest]["filterstop"])
+	t2, _ := time.Parse("20060102150405", ansiblelog[timest]["filterstart"])
+	ansiblelog[timest]["filtertime"] = strconv.Itoa(int(t1.Sub(t2)) / 1e9)
+        ansiblelog[timest]["status"] = "filter finish"
+	liner, _ = json.Marshal(ansiblelog)
+	ioutil.WriteFile("static/data/ansiblelog.json", liner, 0)
+
+}
+
+func deleteroles(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method) //获取请求的方法
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("search.html")
+		t.Execute(w, nil)
+	} else {
+		//请求的是登陆数据，那么执行登陆的逻辑判断
+		r.ParseForm()
+		for k, v := range r.Form {
+			fmt.Println(k, ":", strings.Join(v, " "))
+		}
+		for _, v := range r.Form["clickt"] {
+			delete(ansiblelog, v)
+			if err := exec.Command("rm", "-rf", ansiblelog["resultdir"]+v).Run(); err != nil {
+				fmt.Printf("Error removing build directory: %s %s\n", ansiblelog["resultdir"]+v, err)
+			}
+
+		}
+		liner, _ := json.Marshal(reportlog)
+		ioutil.WriteFile("static/data/ansiblelog.json", liner, 0)
+
+		http.Redirect(w, r, "/deleteroles", 302)
+	}
+}
+
