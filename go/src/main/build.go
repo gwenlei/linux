@@ -65,7 +65,8 @@ func main() {
 	http.HandleFunc("/setansible", setansible)
 	http.HandleFunc("/report", report)
 	http.HandleFunc("/upload", UploadServer)
-        http.HandleFunc("/search",search)
+        http.HandleFunc("/searchroles",searchroles)
+        http.HandleFunc("/deleteroles",deleteroles)
 	//err := http.ListenAndServe(conf["servermap"]["server"], nil) //设置监听的端口
 	err := http.ListenAndServeTLS(conf["servermap"]["server"], "server.crt", "server.key", nil) //设置监听的端口
 	if err != nil {
@@ -458,12 +459,10 @@ func buildjson(r *http.Request) (timest string) {
 }
 func callpacker(timest string) *os.Process {
 	fmt.Println("callpacker", timest)
-	inf, _ := os.Create(reportlog[timest]["resultdir"] + "inf.log")
 	outf, _ := os.Create(reportlog[timest]["resultdir"] + "packer.log")
-	errf, _ := os.Create(reportlog[timest]["resultdir"] + "errf.log")
 	attr := &os.ProcAttr{
 		//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
-		Files: []*os.File{inf, outf, errf},
+		Files: []*os.File{outf, outf, outf},
 	}
 	p, err := os.StartProcess(dat["servermap"]["packer"], []string{dat["servermap"]["packer"], "build", reportlog[timest]["newjson"]}, attr)
 	if err != nil {
@@ -492,12 +491,10 @@ func calltransform(timest string) {
 	}
 
 	fmt.Println("calltransform")
-	inf, _ := os.Create(reportlog[timest]["resultdir"] + "inf2.log")
 	outf, _ := os.Create(reportlog[timest]["resultdir"] + "convert.log")
-	errf, _ := os.Create(reportlog[timest]["resultdir"] + "errf2.log")
 	attr := &os.ProcAttr{
 		//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
-		Files: []*os.File{inf, outf, errf},
+		Files: []*os.File{outf, outf, outf},
 	}
 	output := reportlog[timest]["resultdir"] + "output/" + reportlog[timest]["vmname"]
 	newoutput := reportlog[timest]["resultdir"] + "output/tr" + reportlog[timest]["vmname"]
@@ -742,12 +739,10 @@ func searchroles(w http.ResponseWriter, r *http.Request) {
 
 func callsearch(timest string) {
 	fmt.Println("callsearch", timest)
-	inf, _ := os.Create(ansiblelog[timest]["resultdir"] + "inf.log")
 	outf, _ := os.Create(ansiblelog[timest]["resultdir"] + "search.log")
-	errf, _ := os.Create(ansiblelog[timest]["resultdir"] + "errf.log")
 	attr := &os.ProcAttr{
 		//Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
-		Files: []*os.File{inf, outf, errf},
+		Files: []*os.File{outf, outf, outf},
 	}
 	p, err := os.StartProcess("/usr/bin/ansible-galaxy",[]string{"/usr/bin/ansible-galaxy", "search", ansiblelog[timest]["rolename"]}, attr)
 	if err != nil {
@@ -824,14 +819,163 @@ func callfilter(timest string) {
 		rolelist = append(rolelist, strings.Split(line, " ")[1])
 	}
 	fmt.Println("rolelist sum", len(rolelist))
-	n = 0
+
+
+	os.Create(ansiblelog[timest]["resultdir"]+"vm.xml")
+        ansiblelog[timest]["sourcefile"]="/home/code/mycode/go/src/main/static/result/ansible/"+timest+"/vm.qcow2"
+        ansiblelog[timest]["backingfile"]="/home/html/downloads/Ubuntu16-04(4).qcow2"
+        ansiblelog[timest]["vmname"]="filtervm"+timest
+	buf2, _ := ioutil.ReadFile("template/vm/vm.xml")
+	line := string(buf2)
+	line = strings.Replace(line, "VMNAME", ansiblelog[timest]["vmname"], -1)
+	line = strings.Replace(line, "SOURCEFILE", ansiblelog[timest]["sourcefile"], -1)
+	ioutil.WriteFile(ansiblelog[timest]["resultdir"]+"vm.xml", []byte(line), 0)
 
         outf, _ := os.Create(ansiblelog[timest]["resultdir"]+"ansible.log")
 	attr := &os.ProcAttr{
 		Files: []*os.File{outf, outf, outf},
 	}
+	p, err := os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "shutdown", ansiblelog[timest]["vmname"]}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ := p.Wait()
+	fmt.Println("virsh shutdown ", ansiblelog[timest]["vmname"],pw.Success())
+        time.Sleep(60 * time.Second)
+
+	p, err = os.StartProcess("/usr/bin/qemu-img", []string{"/usr/bin/qemu-img", "create", "-f", "qcow2", ansiblelog[timest]["sourcefile"], "-b", ansiblelog[timest]["backingfile"]}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("qemu-img end ",pw.Success())
+        time.Sleep(30 * time.Second)
+
+	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "define", ansiblelog[timest]["resultdir"]+"vm.xml"}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("virsh define ", ansiblelog[timest]["vmname"],pw.Success())
+
+	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "start", ansiblelog[timest]["vmname"]}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("virsh start ",pw.Success())
+        time.Sleep(60 * time.Second)
+
+        outf2, _ := os.Create(ansiblelog[timest]["resultdir"]+"mac.log")
+	attr2 := &os.ProcAttr{
+		Files: []*os.File{outf2, outf2, outf2},
+	}
+	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "domiflist", ansiblelog[timest]["vmname"]}, attr2)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("virsh domiflist ",ansiblelog[timest]["vmname"],pw.Success())
+
+	f, err = os.Open(ansiblelog[timest]["resultdir"] + "mac.log")
+	if err != nil {
+		fmt.Println("open err")
+	}
+	buf = bufio.NewReader(f)
+	n = 0
+        var mac string
+	for {
+		line, err := buf.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+		}
+		n = n + 1
+		if index := strings.LastIndex(line, "default"); index >= 0 {
+			mac = line[strings.LastIndex(line, " ")+1 : len(line)-1]
+                        mac = strings.Replace(mac, " ", "", -1)
+                        break
+		}
+		
+	}
+	fmt.Println("mac=", mac)
+
+
+        outf3, _ := os.Create(ansiblelog[timest]["resultdir"]+"ip.log")
+	attr3 := &os.ProcAttr{
+		Files: []*os.File{outf3, outf3, outf3},
+	}
+	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "net-dhcp-leases", "default"}, attr3)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("virsh net-dhcp-leases default ",pw.Success())
+
+	f, err = os.Open(ansiblelog[timest]["resultdir"] + "ip.log")
+	if err != nil {
+		fmt.Println("open err")
+	}
+	buf = bufio.NewReader(f)
+        var ip string
+	for {
+		line, err := buf.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+		}
+		if index := strings.LastIndex(line, mac); index >= 0 {
+                        ip = line[strings.LastIndex(line, "ipv4")+4 : strings.LastIndex(line, "/")] 
+                        ip = strings.Replace(ip, " ", "", -1) 
+                        break
+		}
+		
+	}
+	fmt.Println("ip=", ip)
+
+        p, err = os.StartProcess("/usr/bin/sed", []string{"/usr/bin/sed", "-i", "/" + ip + "/d", "/root/.ssh/known_hosts"}, attr)
+        if err != nil {
+                fmt.Println(err.Error())
+        }
+        fmt.Println(p)
+        pw, _ = p.Wait()
+        fmt.Println("sed ", ip, pw.Success())
+
+        outf4, _ := os.Create(ansiblelog[timest]["resultdir"]+"keyscan.log")
+	attr4 := &os.ProcAttr{
+		Files: []*os.File{outf4, outf4, outf4},
+	}
+        p, err = os.StartProcess("/usr/bin/ssh-keyscan", []string{"/usr/bin/ssh-keyscan", ip}, attr4)
+        if err != nil {
+                fmt.Println(err.Error())
+        }
+        fmt.Println(p)
+        pw, _ = p.Wait()
+        fmt.Println("ssh-keyscan ", ip, pw.Success())
+
+	buf3, _ := ioutil.ReadFile(ansiblelog[timest]["resultdir"]+"keyscan.log")
+	line3 := string(buf3)
+	buf4, _ := ioutil.ReadFile("/root/.ssh/known_hosts")
+	line4 := string(buf4)
+	line4 = line4+"\n"+line3
+	ioutil.WriteFile("/root/.ssh/known_hosts", []byte(line4), 0)
+
+
+	n = 0
+        times, _ := strconv.Atoi(ansiblelog[timest]["times"])
      for _, v := range rolelist {
         n=n+1
+        if n> times{
+           break
+        }
         fmt.Println("n=",n)
 	p, err := os.StartProcess("/usr/bin/ansible-galaxy", []string{"/usr/bin/ansible-galaxy", "install", v}, attr)
 	if err != nil {
@@ -851,27 +995,28 @@ func callfilter(timest string) {
 	if err != nil {
 		fmt.Println("host", err)
 	}
-	fout.WriteString("192.168.122.253 ansible_ssh_user=root ansible_ssh_pass=engine")
+	fout.WriteString(ip+" ansible_ssh_user=root ansible_ssh_pass=engine")
 	fout.Close()
 
-	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "shutdown", "testubuntu1604grub3"}, attr)
+	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "shutdown", ansiblelog[timest]["vmname"]}, attr)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 	fmt.Println(p)
 	pw, _ = p.Wait()
-	fmt.Println("virsh shutdown end ",pw.Success())
+	fmt.Println("virsh shutdown ", ansiblelog[timest]["vmname"], v,pw.Success())
         time.Sleep(60 * time.Second)
 
-	p, err = os.StartProcess("/usr/bin/qemu-img", []string{"/usr/bin/qemu-img", "create", "-f", "qcow2", "/home/html/downloads/Ubuntu16-04(2).qcow2", "-b", "/home/html/downloads/Ubuntu16-04(4).qcow2"}, attr)
+	p, err = os.StartProcess("/usr/bin/qemu-img", []string{"/usr/bin/qemu-img", "create", "-f", "qcow2", ansiblelog[timest]["sourcefile"], "-b", ansiblelog[timest]["backingfile"]}, attr)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 	fmt.Println(p)
 	pw, _ = p.Wait()
 	fmt.Println("qemu-img end ",pw.Success())
+        time.Sleep(30 * time.Second)
 
-	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "start", "testubuntu1604grub3"}, attr)
+	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "start", ansiblelog[timest]["vmname"]}, attr)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -916,12 +1061,12 @@ func deleteroles(w http.ResponseWriter, r *http.Request) {
 		}
 		for _, v := range r.Form["clickt"] {
 			delete(ansiblelog, v)
-			if err := exec.Command("rm", "-rf", ansiblelog["resultdir"]+v).Run(); err != nil {
-				fmt.Printf("Error removing build directory: %s %s\n", ansiblelog["resultdir"]+v, err)
+			if err := exec.Command("rm", "-rf", ansiblelog[v]["resultdir"]).Run(); err != nil {
+				fmt.Printf("Error removing build directory: %s %s\n", ansiblelog[v]["resultdir"], err)
 			}
 
 		}
-		liner, _ := json.Marshal(reportlog)
+		liner, _ := json.Marshal(ansiblelog)
 		ioutil.WriteFile("static/data/ansiblelog.json", liner, 0)
 
 		http.Redirect(w, r, "/deleteroles", 302)

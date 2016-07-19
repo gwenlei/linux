@@ -17,9 +17,9 @@ $(document).ready(function(){
                                         parttext1.value=field.timestamp;
                                         document.getElementById("reportb").appendChild(parttext1);
                                         $("#reportb").append("<td>"+field.status+"</td>");
+                                        $("#reportb").append("<td><a href=\""+field.log+"\">log</a></td>");
                                         $("#reportb").append("<td>"+field.rolename+"</td>");
                                         $("#reportb").append("<td>"+field.successroles+"</td>");
-                                        $("#reportb").append("<td><a href=\""+field.log+"\">log</a></td>");
                                         $("#reportb").append("<td>"+field.timestamp+"</td>");
                                         $("#reportb").append("<td>"+field.ostype+"</td>");
                                         $("#reportb").append("<td>"+field.times+"</td>");
@@ -44,17 +44,31 @@ document.form1.submit();
 </head>
 <body>
 </br>
+<form name="form1" class="form-horizontal" method="post">
 <div class="container-fluid">
 	<div class="row">
-		<div class="col-md-6">
-<form name="form1" class="form-horizontal"  action="/search" method="post">
+		<div class="col-md-4">
 
 				<div class="form-group">
-					<label for="user" class="col-sm-2 control-label">rolename</label>
+					<label for="ostype" class="col-sm-2 control-label">ostype</label>
+					<div class="col-sm-8">
+						<input type="text" class="form-control" id="ostype" name="ostype" value="Ubuntu16.04">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="rolename" class="col-sm-2 control-label">rolename</label>
 					<div class="col-sm-8">
 						<input type="text" class="form-control" id="rolename" name="rolename" value="mysql">
 					</div>
-					<div class="col-sm-2">
+				</div>
+				<div class="form-group">
+					<label for="times" class="col-sm-2 control-label">times</label>
+					<div class="col-sm-8">
+						<input type="text" class="form-control" id="times" name="times" value="20">
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-2 col-sm-10">
 		<button type="button" class="btn btn-default" onClick="searchr()">search</button>
 					</div>
 				</div>
@@ -69,9 +83,9 @@ document.form1.submit();
 		<tr>
 			<th>selected</th>
                         <th>status</th>
+			<th>log</th>
 			<th>rolename</th>
 			<th>successroles</th>
-			<th>log</th>
 			<th>timestamp</th>
 			<th>ostype</th>
                         <th>times</th>
