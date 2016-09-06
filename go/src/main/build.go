@@ -722,6 +722,7 @@ func searchroles(w http.ResponseWriter, r *http.Request) {
                 ansiblelog[timest]["resultdir"] = "static/result/ansible/"+timest+"/"
                 os.MkdirAll(ansiblelog[timest]["resultdir"], 0777)
                 ansiblelog[timest]["ostype"]=r.Form.Get("ostype")
+                ansiblelog[timest]["backingfile"]=r.Form.Get("backingfile")
                 ansiblelog[timest]["times"]=r.Form.Get("times")
                 ansiblelog[timest]["status"]="running"
                 ansiblelog[timest]["rolename"]=r.Form.Get("rolename")
@@ -816,14 +817,18 @@ func callfilter(timest string) {
 		if n < 6 {
 			continue
 		}
-		rolelist = append(rolelist, strings.Split(line, " ")[1])
+	        //fmt.Println("line=", line)
+                l :=len(strings.Split(line, " "))
+                //fmt.Println("linelength=",l)
+                if l>1{
+		   rolelist = append(rolelist, strings.Split(line, " ")[1])
+                }
 	}
 	fmt.Println("rolelist sum", len(rolelist))
 
 
 	os.Create(ansiblelog[timest]["resultdir"]+"vm.xml")
         ansiblelog[timest]["sourcefile"]="/home/code/mycode/go/src/main/static/result/ansible/"+timest+"/vm.qcow2"
-        ansiblelog[timest]["backingfile"]="/home/html/downloads/Ubuntu16-04(4).qcow2"
         ansiblelog[timest]["vmname"]="filtervm"+timest
 	buf2, _ := ioutil.ReadFile("template/vm/vm.xml")
 	line := string(buf2)
@@ -1004,7 +1009,7 @@ func callfilter(timest string) {
 	}
 	fmt.Println(p)
 	pw, _ = p.Wait()
-	fmt.Println("virsh shutdown ", ansiblelog[timest]["vmname"], v,pw.Success())
+	fmt.Println("virsh shutdown ", ansiblelog[timest]["vmname"],pw.Success())
         time.Sleep(60 * time.Second)
 
 	p, err = os.StartProcess("/usr/bin/qemu-img", []string{"/usr/bin/qemu-img", "create", "-f", "qcow2", ansiblelog[timest]["sourcefile"], "-b", ansiblelog[timest]["backingfile"]}, attr)
@@ -1039,6 +1044,25 @@ func callfilter(timest string) {
         }
    }
 
+
+	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "shutdown", ansiblelog[timest]["vmname"]}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("virsh shutdown ", ansiblelog[timest]["vmname"],pw.Success())
+        time.Sleep(60 * time.Second)
+
+	p, err = os.StartProcess("/usr/bin/virsh", []string{"/usr/bin/virsh", "undefine", ansiblelog[timest]["vmname"]}, attr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(p)
+	pw, _ = p.Wait()
+	fmt.Println("virsh undefine ", ansiblelog[timest]["vmname"],pw.Success())
+
+        ansiblelog[timest]["filterstop"] = time.Now().Format("20060102150405")
 	t1, _ := time.Parse("20060102150405", ansiblelog[timest]["filterstop"])
 	t2, _ := time.Parse("20060102150405", ansiblelog[timest]["filterstart"])
 	ansiblelog[timest]["filtertime"] = strconv.Itoa(int(t1.Sub(t2)) / 1e9)
