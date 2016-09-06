@@ -335,18 +335,30 @@ func buildjson(r *http.Request) (timest string) {
 			"\"scripts\": [\n"
 		for k, v := range r.Form["software"] {
 			fmt.Println(k, v)
-			newscript[k] = reportlog[timest]["resultdir"] + "script/" + v[strings.LastIndex(v, "/")+1:]
-			scriptfiles = scriptfiles + "\"" + newscript[k] + "\""
+
+	f, err := os.Open(v)
+	if err != nil {
+		fmt.Println("open err")
+	}
+	buf := bufio.NewReader(f)
+	for {
+		line, err := buf.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+		}
+                newscript[k] = reportlog[timest]["resultdir"] + "script/" + line[:len(line)-1]
+                scriptfiles = scriptfiles + "\"" + newscript[k] + "\","
 			// copy script
 			newscriptf, _ := os.Create(newscript[k])
-			scriptf, _ := os.Open(v)
+                        fmt.Println("vscripts=",v[:strings.LastIndex(v,"/")+1]+line[:len(line)-1])
+			scriptf, _ := os.Open(v[:strings.LastIndex(v,"/")+1]+line[:len(line)-1])
 			io.Copy(newscriptf, scriptf)
 			defer scriptf.Close()
 			defer newscriptf.Close()
-			n = n - 1
-			if n > 0 {
-				scriptfiles = scriptfiles + ",\n"
-			}
+	}
+
 		}
 		if len(r.Form["ansible"]) > 0 {
 			if len(r.Form["software"]) > 0 {
@@ -360,6 +372,10 @@ func buildjson(r *http.Request) (timest string) {
 			defer scriptf.Close()
 			defer newscriptf.Close()
 		}
+                // delete ,
+                if strings.LastIndex(scriptfiles,",")==len(scriptfiles)-1 {
+                   scriptfiles=scriptfiles[:len(scriptfiles)-1]
+                }
 		scriptfiles = scriptfiles + "]}\n"
 
 		if len(r.Form["ansible"]) > 0 {
