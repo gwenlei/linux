@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
         "bufio"
+        cloudstack "golang-cloudstack-library"
+        "net/url"
 )
 
 var conf map[string](map[string]string)
@@ -22,12 +24,14 @@ var dat map[string](map[string]string)
 var reportlog map[string](map[string]string)
 var ansibleroles map[string](map[string]string)
 var ansiblelog map[string](map[string]string)
+var registerlog map[string](map[string]string)
 
 func main() {
 	conf = make(map[string](map[string]string))
 	dat = make(map[string](map[string]string))
 	reportlog = make(map[string](map[string]string))
-	buf, _ := ioutil.ReadFile("static/data/data.json")
+        registerlog = make(map[string](map[string]string))
+	buf, _ := ioutil.ReadFile("static/data/conf.json")
 	if len(buf) > 0 {
 		if err := json.Unmarshal(buf, &conf); err != nil {
 			panic(err)
@@ -67,9 +71,11 @@ func main() {
 	http.HandleFunc("/upload", UploadServer)
         http.HandleFunc("/searchroles",searchroles)
         http.HandleFunc("/deleteroles",deleteroles)
-	//err := http.ListenAndServe(conf["servermap"]["server"], nil) //设置监听的端口
-	err := http.ListenAndServeTLS(conf["servermap"]["server"], "server.crt", "server.key", nil) //设置监听的端口
-	if err != nil {
+        http.HandleFunc("/register",register)
+	err := http.ListenAndServe(conf["servermap"]["server"], nil) //设置监听的端口
+	//err := http.ListenAndServeTLS(conf["servermap"]["server"], "server.crt", "server.key", nil) //设置监听的端口
+	fmt.Println("Listen:", conf["servermap"]["server"])
+        if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
@@ -1113,3 +1119,82 @@ func deleteroles(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func register(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method) //获取请求的方法
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("register.html")
+		t.Execute(w, nil)
+	} else {
+		//请求的是登陆数据，那么执行登陆的逻辑判断
+		r.ParseForm()
+		for k, v := range r.Form {
+			fmt.Println(k, ":", strings.Join(v, " "))
+		}
+                timest := time.Now().Format("20060102150405")
+	        registerlog[timest] = make(map[string]string)
+	        registerlog[timest]["endpoint"] = r.Form.Get("endpoint")
+	        registerlog[timest]["apikey"] = r.Form.Get("apikey")
+	        registerlog[timest]["secretkey"] = r.Form.Get("secretkey")
+	        registerlog[timest]["username"] = r.Form.Get("username")
+	        registerlog[timest]["password"] = r.Form.Get("password")
+	        registerlog[timest]["displaytext"] = r.Form.Get("displaytext")
+	        registerlog[timest]["format"] = r.Form.Get("format")
+	        registerlog[timest]["hypervisor"] = r.Form.Get("hypervisor")
+	        registerlog[timest]["name"] = r.Form.Get("name")
+	        registerlog[timest]["ostypeid"] = r.Form.Get("ostypeid")
+	        registerlog[timest]["url"] = r.Form.Get("url")
+	        registerlog[timest]["zoneid"] = r.Form.Get("zoneid")
+                go callregister(timest)
+		http.Redirect(w, r, "/register", 302)
+	}
+}
+
+
+func callregister(timest string) {
+	log.SetOutput(ioutil.Discard)
+
+	endpoint, _ := url.Parse(registerlog[timest]["endpoint"])
+	apikey := registerlog[timest]["apikey"]
+	secretkey := registerlog[timest]["secretkey"]
+
+	username := registerlog[timest]["username"]
+	password := registerlog[timest]["password"]
+
+	client, _ := cloudstack.NewClient(endpoint, apikey, secretkey, username, password)
+
+	params := cloudstack.NewListOstypesParameter(strings.Replace(registerlog[timest]["ostypeid"], "%", "%25", -1))
+	ostypes, _ := client.ListOstypes(params)
+        var ostypeid string
+        if len(ostypes)>0 {
+           ostypeid=ostypes[0].Id.String()
+        }else{
+           ostypeid="f3b9de94-6db7-11e6-9e4c-5254005357ff"
+        }
+
+	params1 := cloudstack.NewListZonesParameter(strings.Replace(registerlog[timest]["zoneid"], "%", "%25", -1))
+	zones, _ := client.ListZones(params1)
+        var zoneid string
+        if len(zones)>0 {
+           zoneid=zones[0].Id.String()
+           fmt.Println(registerlog[timest]["zoneid"])
+           fmt.Println(zones[0].Id)
+        }else{
+           zoneid="d44975e0-4c2e-4c93-8626-8e1d4a3cc9b5"
+        }
+
+	// registering a new template.
+        url:= strings.Replace(registerlog[timest]["url"], ":", "%3A", -1)
+        url = strings.Replace(url, "/", "%2F", -1)
+        fmt.Println(url)
+	params2 := cloudstack.NewRegisterTemplateParameter(registerlog[timest]["displaytext"], registerlog[timest]["format"], registerlog[timest]["hypervisor"], registerlog[timest]["name"], ostypeid, url, zoneid)
+
+	templates, err := client.RegisterTemplate(params2)
+	if err == nil {
+		b, _ := json.MarshalIndent(templates, "", "    ")
+		// fmt.Println("Count:", len(templates))
+		fmt.Println(string(b))
+		fmt.Println(os.Args[0])
+	} else {
+		fmt.Println(err.Error())
+	}
+}
