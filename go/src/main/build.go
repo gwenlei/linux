@@ -62,6 +62,12 @@ func main() {
 			panic(err)
 		}
 	}
+	buf, _ = ioutil.ReadFile("static/data/registerlog.json")
+	if len(buf) > 0 {
+		if err := json.Unmarshal(buf, &registerlog); err != nil {
+			panic(err)
+		}
+	}
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/", index)
 	http.HandleFunc("/build", build) //设置访问的路由
@@ -72,6 +78,7 @@ func main() {
         http.HandleFunc("/searchroles",searchroles)
         http.HandleFunc("/deleteroles",deleteroles)
         http.HandleFunc("/register",register)
+        http.HandleFunc("/templatelist",templatelist)
 	err := http.ListenAndServe(conf["servermap"]["server"], nil) //设置监听的端口
 	//err := http.ListenAndServeTLS(conf["servermap"]["server"], "server.crt", "server.key", nil) //设置监听的端口
 	fmt.Println("Listen:", conf["servermap"]["server"])
@@ -1144,6 +1151,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	        registerlog[timest]["ostypeid"] = r.Form.Get("ostypeid")
 	        registerlog[timest]["url"] = r.Form.Get("url")
 	        registerlog[timest]["zoneid"] = r.Form.Get("zoneid")
+                registerlog[timest]["timestamp"]=timest
                 go callregister(timest)
 		http.Redirect(w, r, "/register", 302)
 	}
@@ -1194,6 +1202,57 @@ func callregister(timest string) {
 		// fmt.Println("Count:", len(templates))
 		fmt.Println(string(b))
 		fmt.Println(os.Args[0])
+                fmt.Println(templates[0].Id.String())
+                registerlog[timest]["id"]=templates[0].Id.String()
+                liner, _ := json.Marshal(registerlog)
+		ioutil.WriteFile("static/data/registerlog.json", liner, 0)
+	} else {
+		fmt.Println(err.Error())
+	}
+}
+
+func templatelist(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method) //获取请求的方法
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("templatelist.html")
+		t.Execute(w, nil)
+	} else {
+		//请求的是登陆数据，那么执行登陆的逻辑判断
+		r.ParseForm()
+		for k, v := range r.Form {
+			fmt.Println(k, ":", strings.Join(v, " "))
+		}
+		for _, v := range r.Form["clickt"] {
+                        calldelete(v)
+		}
+		liner, _ := json.Marshal(registerlog)
+		ioutil.WriteFile("static/data/registerlog.json", liner, 0)
+
+		http.Redirect(w, r, "/templatelist", 302)
+	}
+}
+
+func calldelete(timest string) {
+	log.SetOutput(ioutil.Discard)
+
+	endpoint, _ := url.Parse(registerlog[timest]["endpoint"])
+	apikey := registerlog[timest]["apikey"]
+	secretkey := registerlog[timest]["secretkey"]
+
+	username := registerlog[timest]["username"]
+	password := registerlog[timest]["password"]
+
+	client, _ := cloudstack.NewClient(endpoint, apikey, secretkey, username, password)
+
+	params := cloudstack.NewDeleteTemplateParameter(registerlog[timest]["id"])
+
+	templates, err := client.DeleteTemplate(params)
+	if err == nil {
+		b, _ := json.MarshalIndent(templates, "", "    ")
+		// fmt.Println("Count:", len(templates))
+		fmt.Println(string(b))
+		fmt.Println(os.Args[0])
+                delete(registerlog, timest)
 	} else {
 		fmt.Println(err.Error())
 	}
