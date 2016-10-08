@@ -1,0 +1,2 @@
+0 17 * * * /home/clouder/leisj/build/buildwolfhunter.sh > /home/clouder/leisj/build/log/build.log`date '+\%Y\%m\%d-\%H\%M\%S'`  2>&1
+20 17 * * * /home/clouder/leisj/build/testdeploy.sh > /home/clouder/leisj/build/log/testdeploy.log`date '+\%Y\%m\%d-\%H\%M\%S'`  2>&1
